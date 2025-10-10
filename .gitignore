@@ -1,0 +1,14 @@
+# Python virtual environments
+.venv/
+*.pyc
+__pycache__/
+
+# Streamlit artifacts
+.streamlit/
+
+# Local storage artifacts (managed by runtime)
+storage/
+
+# Editor noise
+.idea/
+.vscode/

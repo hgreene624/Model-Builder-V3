@@ -1,0 +1,6 @@
+alpaca-py==0.9.0
+numpy==1.26.4
+pandas==2.2.2
+plotly==5.23.0
+streamlit==1.39.0
+yfinance==0.2.44

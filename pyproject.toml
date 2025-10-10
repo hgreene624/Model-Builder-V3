@@ -1,0 +1,25 @@
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+exclude = ["storage"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+ignore = ["E203"]
+exclude = [
+    "storage",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N", "S", "Q"]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-ra"
+testpaths = [
+    "tests",
+]
+
+[tool.streamlit]
+server.headless = true

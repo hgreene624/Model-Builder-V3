@@ -5,10 +5,10 @@
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-- [ ] T001 [P] Establish Python 3.12 virtualenv and install pinned `requirements.txt` / `requirements-dev.txt`
-- [ ] T002 [P] Scaffold Streamlit entrypoint `Home.py` and `pages/` directory structure per plan
-- [ ] T003 [P] Configure linting/formatting (`ruff.toml`, `pyproject` or `black` config) and add pre-commit hooks if desired
-- [ ] T004 Define `requirements.txt` and `requirements-dev.txt` pins for Streamlit, pandas, numpy, plotly, yfinance, alpaca-py, pytest, ruff, black
+- [x] T001 [P] Establish Python 3.12 virtualenv and install pinned `requirements.txt` / `requirements-dev.txt`
+- [x] T002 [P] Scaffold Streamlit entrypoint `Home.py` and `pages/` directory structure per plan
+- [x] T003 [P] Configure linting/formatting (`ruff.toml`, `pyproject` or `black` config) and add pre-commit hooks if desired
+- [x] T004 Define `requirements.txt` and `requirements-dev.txt` pins for Streamlit, pandas, numpy, plotly, yfinance, alpaca-py, pytest, ruff, black
 
 ---
 
