@@ -14,16 +14,16 @@
 
 ## Phase 2: Foundational (Blocking Prerequisites)
 
-- [ ] T010 Implement configuration module `src/config/settings.py` resolving `DATA_DIR`, provider preference, Alpaca credentials
-- [ ] T011 [P] Build storage layout helpers in `src/storage/layout.py` with atomic write utilities and schema version constants
-- [ ] T012 [P] Implement data cache (`src/data/cache.py`) with in-memory LRU and parquet shard management
-- [ ] T013 [P] Implement provider clients `src/data/providers/alpaca_client.py` and `src/data/providers/yahoo_client.py` with unified interface
-- [ ] T014 Create market data loader `src/data/loader.py` that integrates cache tiers, warmup logic, and provider fallback
-- [ ] T015 Define shared contracts/dataclasses in `src/models/contracts.py` (Portfolio, ParameterSet, BacktestResult, Telemetry events)
-- [ ] T016 Implement `src/storage/artifacts.py` for portfolios/parameters/simulations/logs CRUD respecting schema versions
-- [ ] T017 Set up CLI shell `src/cli/main.py` with command group scaffolding (no business logic yet)
-- [ ] T018 Configure pytest (`pytest.ini`, fixtures folder) and add smoke tests covering provider failover + cache stub
-- [ ] T019 Set up observability base: `TrainingLogger` class writing JSONL with rotation under `storage/logs/`
+- [x] T010 Implement configuration module `src/config/settings.py` resolving `DATA_DIR`, provider preference, Alpaca credentials
+- [x] T011 [P] Build storage layout helpers in `src/storage/layout.py` with atomic write utilities and schema version constants
+- [x] T012 [P] Implement data cache (`src/data/cache.py`) with in-memory LRU and parquet shard management
+- [x] T013 [P] Implement provider clients `src/data/providers/alpaca_client.py` and `src/data/providers/yahoo_client.py` with unified interface
+- [x] T014 Create market data loader `src/data/loader.py` that integrates cache tiers, warmup logic, and provider fallback
+- [x] T015 Define shared contracts/dataclasses in `src/models/contracts.py` (Portfolio, ParameterSet, BacktestResult, Telemetry events)
+- [x] T016 Implement `src/storage/artifacts.py` for portfolios/parameters/simulations/logs CRUD respecting schema versions
+- [x] T017 Set up CLI shell `src/cli/main.py` with command group scaffolding (no business logic yet)
+- [x] T018 Configure pytest (`pytest.ini`, fixtures folder) and add smoke tests covering provider failover + cache stub
+- [x] T019 Set up observability base: `TrainingLogger` class writing JSONL with rotation under `storage/logs/`
 
 **Checkpoint**: Core infrastructure ready; user story implementation can proceed in parallel.
 
