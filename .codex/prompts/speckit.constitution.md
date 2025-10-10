@@ -29,6 +29,7 @@ Follow this execution flow:
      * MINOR: New principle/section added or materially expanded guidance.
      * PATCH: Clarifications, wording, typo fixes, non-semantic refinements.
    - If version bump type ambiguous, propose reasoning before finalizing.
+   - Treat Python 3.12 best practices and clean, modular architecture as default expectations when drafting principles or governance updates—surface them explicitly if absent.
 
 3. Draft the updated constitution content:
    - Replace every placeholder with concrete text (no bracketed tokens left except intentionally retained template slots that the project has chosen not to define yet—explicitly justify any left).
