@@ -1,81 +1,101 @@
-"""Streamlit entrypoint for the Model Builder V3 research workspace."""
-
 from __future__ import annotations
-
-import os
-from pathlib import Path
-from typing import Literal
 
 import streamlit as st
 
+from src.config.settings import AppSettings
+from src.home.dashboard import HomeSummary, collect_home_summary
+
 APP_TITLE = "Model Builder V3 — Research Dashboard"
-
-
-def resolve_data_dir() -> Path:
-    """Return the root directory for persisted artifacts."""
-    root = Path(os.getenv("DATA_DIR", "storage"))
-    return root if root.is_absolute() else (Path.cwd() / root).resolve()
-
-
-def credential_status() -> tuple[Literal["valid", "missing"], str]:
-    """Detect whether Alpaca credentials are present."""
-    key = os.getenv("ALPACA_KEY_ID")
-    secret = os.getenv("ALPACA_SECRET_KEY")
-    status: Literal["valid", "missing"] = "valid" if key and secret else "missing"
-    return status, "Alpaca credentials detected." if status == "valid" else "Alpaca credentials missing."
 
 
 def render_header() -> None:
     st.title(APP_TITLE)
     st.write(
-        "Welcome! Use the navigation menu to curate portfolios, evolve models, "
+        "Welcome! Use the navigation menu or the quick links below to curate portfolios, evolve models, "
         "inspect optimizer logs, and review simulations."
     )
 
 
-def render_credential_banner(status: Literal["valid", "missing"]) -> None:
-    if status == "valid":
-        st.success("✅ Using Alpaca market data. Yahoo Finance fallback remains available.")
+def render_credential_banner(settings: AppSettings) -> None:
+    if settings.has_alpaca_credentials:
+        st.success("✅ Alpaca credentials detected. Yahoo Finance fallback remains available.")
     else:
         st.warning(
-            "⚠️ Alpaca credentials were not found. The workspace will fall back to "
-            "Yahoo Finance daily bars until credentials are provided."
+            "⚠️ Alpaca credentials not found. The workspace will fall back to Yahoo Finance daily bars until credentials are provided."
         )
 
 
-def render_storage_summary() -> None:
-    data_dir = resolve_data_dir()
-    st.subheader("Storage")
-    st.write(
-        "Artifacts will be stored under the following directory. "
-        "You can override this path with the `DATA_DIR` environment variable."
+def render_storage_summary(settings: AppSettings) -> None:
+    st.subheader("Storage Root")
+    st.code(str(settings.data_dir))
+    st.caption(
+        "Override with the `DATA_DIR` environment variable. Directories are created on demand the first time you save an artifact."
     )
-    st.code(str(data_dir))
-    st.info(
-        "The storage directory is created on-demand when you save a portfolio, "
-        "run an optimizer session, or export a bundle."
-    )
+
+
+def _render_section(title: str, items: list[tuple[str, str | None]], empty_message: str, page: str) -> None:
+    st.subheader(title)
+    if not items:
+        st.caption(empty_message)
+        return
+
+    for name, timestamp in items:
+        label = f"{name}" if not timestamp else f"{name} · {timestamp}"
+        st.page_link(page, label=label, icon="➡️")
+
+
+def render_sections(summary: HomeSummary) -> None:
+    sections = [
+        (
+            "Recent Portfolios",
+            summary.portfolios,
+            "No portfolios saved yet.",
+            "/1_Portfolio_Curator",
+        ),
+        (
+            "Recent Parameter Sets",
+            summary.parameter_sets,
+            "No parameter sets saved yet.",
+            "/2_Model_Builder",
+        ),
+        (
+            "Recent Simulations",
+            summary.simulations,
+            "No simulation runs recorded yet.",
+            "/4_Simulation_Review",
+        ),
+        (
+            "Optimizer Logs",
+            summary.logs,
+            "No optimizer logs available yet.",
+            "/3_Log_Inspector",
+        ),
+    ]
+
+    for title, items, empty, page in sections:
+        _render_section(title, items, empty, page)
 
 
 def render_next_steps() -> None:
     st.subheader("Next Steps")
     st.markdown(
-        "- Navigate to **Portfolio Curator** to build a ticker universe.\n"
-        "- Visit **Model Builder** to tune the ATR breakout baseline.\n"
-        "- Use **Log Inspector** to review training telemetry.\n"
-        "- Open **Simulation Review** to evaluate tuned parameter sets."
+        "- Go to **Portfolio Curator** to build or import a ticker universe.\n"
+        "- Visit **Model Builder** to tune the ATR breakout baseline or other strategies.\n"
+        "- Open **Log Inspector** to review optimization telemetry and benchmarks.\n"
+        "- Use **Simulation Review** to validate tuned parameter sets and export bundles."
     )
 
 
 def main() -> None:
     st.set_page_config(page_title=APP_TITLE, layout="wide")
+
+    settings = AppSettings.from_env()
+    summary = collect_home_summary(settings.data_dir)
+
     render_header()
-
-    status, message = credential_status()
-    st.caption(message)
-    render_credential_banner(status)
-
-    render_storage_summary()
+    render_credential_banner(settings)
+    render_storage_summary(settings)
+    render_sections(summary)
     render_next_steps()
 
 

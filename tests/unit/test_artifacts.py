@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.models.contracts import Portfolio
+from src.models.contracts import Portfolio, ParameterSet
 from src.storage.artifacts import ArtifactStore
 from src.storage.layout import StorageLayout
 
@@ -42,3 +42,48 @@ def test_append_log(tmp_path: Path) -> None:
     assert path.exists()
     content = path.read_text().strip()
     assert content.endswith("}")
+
+
+def test_list_helpers(tmp_path: Path) -> None:
+    layout = StorageLayout(root=tmp_path)
+    store = ArtifactStore(layout=layout)
+
+    portfolio = Portfolio(
+        portfolio_id="pf-1",
+        name="Sample",
+        description=None,
+        source="manual",
+        seed_reference=None,
+        filters={},
+        coverage_window={"start": "2020", "end": "2025"},
+        tickers=[],
+        liquidity_stats={},
+        notes=[],
+    )
+    store.save_portfolio(portfolio)
+
+    ps_path = layout.parameter_set_path("ps-1")
+    ps_path.parent.mkdir(parents=True, exist_ok=True)
+    ps_path.write_text(
+        json.dumps(
+            {
+                "parameter_set_id": "ps-1",
+                "model_id": "m",
+                "portfolio_id": "pf-1",
+                "run_id": "run-1",
+                "parameters": {},
+                "fitness": {},
+                "constraints": {},
+                "created_at": "2025-10-10T00:00:00Z",
+                "schema_version": "1.0.0",
+            }
+        )
+    )
+
+    layout.run_log_path("run-2").write_text("{}\n")
+    (layout.simulation_directory("sim-1") / "result.json").write_text("{}")
+
+    assert store.list_portfolios()
+    assert store.list_parameter_sets()
+    assert store.list_run_logs()
+    assert store.list_simulations()

@@ -4,10 +4,21 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="3a0f8e7c-00d9-4699-9f00-5cef80cd1d44" name="Changes" comment="phase 0 done">
+    <list default="true" id="3a0f8e7c-00d9-4699-9f00-5cef80cd1d44" name="Changes" comment="phase 1 done">
+      <change afterPath="$PROJECT_DIR$/src/home/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/home/dashboard.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/storage/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/storage/artifacts.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/storage/layout.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/unit/test_home_summary.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Home.py" beforeDir="false" afterPath="$PROJECT_DIR$/Home.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/specs/001-build-a-self/tasks.md" beforeDir="false" afterPath="$PROJECT_DIR$/specs/001-build-a-self/tasks.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/cli/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/cli/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_artifacts.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/test_artifacts.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_cli.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/test_cli.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_storage_layout.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/test_storage_layout.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -71,7 +82,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1760113323568</updated>
-      <workItem from="1760113324627" duration="9551000" />
+      <workItem from="1760113324627" duration="10881000" />
     </task>
     <task id="LOCAL-00001" summary="Project Created">
       <option name="closed" value="true" />
@@ -137,7 +148,15 @@
       <option name="project" value="LOCAL" />
       <updated>1760123940051</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="phase 1 done">
+      <option name="closed" value="true" />
+      <created>1760126895852</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1760126895852</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -151,6 +170,7 @@
     <MESSAGE value="plan finished phase 1" />
     <MESSAGE value="tasks" />
     <MESSAGE value="phase 0 done" />
-    <option name="LAST_COMMIT_MESSAGE" value="phase 0 done" />
+    <MESSAGE value="phase 1 done" />
+    <option name="LAST_COMMIT_MESSAGE" value="phase 1 done" />
   </component>
 </project>

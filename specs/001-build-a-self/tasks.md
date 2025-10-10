@@ -35,13 +35,13 @@
 **Independent Test**: Launch Home in Streamlit with seeded artifacts; verify listings and status banners render correctly.
 
 ### Tests (Recommended)
-- [ ] T101 [P] Add integration test `tests/integration/test_home_dashboard.py` using Streamlit testing utilities to verify artifact listings and fallback banner
+- [x] T101 [P] Add integration test `tests/integration/test_home_dashboard.py` using Streamlit testing utilities to verify artifact listings and fallback banner
 
 ### Implementation
-- [ ] T102 [US1] Implement `Home.py` sections: credential check (Alpaca vs Yahoo), recent portfolios/parameters/simulations/logs overview
-- [ ] T103 [US1] Add storage query helpers to fetch recent artifacts (ordered by `updated_at`)
-- [ ] T104 [US1] Add CLI command `status` summarizing credential state and recent artifacts
-- [ ] T105 [US1] Wire Home navigation to Streamlit pages and ensure session state carries selected artifact IDs
+- [x] T102 [US1] Implement `Home.py` sections: credential check (Alpaca vs Yahoo), recent portfolios/parameters/simulations/logs overview
+- [x] T103 [US1] Add storage query helpers to fetch recent artifacts (ordered by `updated_at`)
+- [x] T104 [US1] Add CLI command `status` summarizing credential state and recent artifacts
+- [x] T105 [US1] Wire Home navigation to Streamlit pages and ensure session state carries selected artifact IDs
 
 ---
 
