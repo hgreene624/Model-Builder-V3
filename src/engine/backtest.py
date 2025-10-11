@@ -75,12 +75,15 @@ def run_backtest(
 
     positions: Dict[str, float] = {symbol: 0.0 for symbol in symbols}
     cost_basis: Dict[str, float] = {symbol: 0.0 for symbol in symbols}
+    open_timestamps: Dict[str, pd.Timestamp | None] = {symbol: None for symbol in symbols}
     cash = float(initial_capital)
 
     equity_points: List[tuple[pd.Timestamp, float]] = []
     benchmark_points: List[tuple[pd.Timestamp, float]] = []
     trades: List[TradeRecord] = []
     total_notional = 0.0
+    closing_trades: List[TradeRecord] = []
+    hold_durations: List[float] = []
 
     for timestamp in close.index:
         prices_row = close.loc[timestamp]
@@ -111,9 +114,14 @@ def run_backtest(
             realised_pnl = -costs["total"]
             previous_position = positions[symbol]
 
+            exit_timestamp: str | None = None
+            closed_position = False
+
             if delta_units > 0:
                 positions[symbol] += delta_units
                 cost_basis[symbol] += delta_units * price
+                if previous_position <= 1e-9 and positions[symbol] > 1e-9:
+                    open_timestamps[symbol] = pd.Timestamp(timestamp)
             else:
                 sell_units = abs(delta_units)
                 position_before = positions[symbol]
@@ -128,6 +136,16 @@ def run_backtest(
                 if positions[symbol] <= 1e-9:
                     positions[symbol] = 0.0
                     cost_basis[symbol] = 0.0
+                    closed_position = True
+                    entry = open_timestamps.get(symbol)
+                    if entry is not None:
+                        duration = max(
+                            (pd.Timestamp(timestamp) - entry) / pd.Timedelta(days=1),
+                            1.0,
+                        )
+                        hold_durations.append(float(duration))
+                    open_timestamps[symbol] = None
+                    exit_timestamp = pd.Timestamp(timestamp).isoformat()
 
             trade = TradeRecord(
                 timestamp=pd.Timestamp(timestamp).isoformat(),
@@ -136,10 +154,12 @@ def run_backtest(
                 quantity=float(delta_units),
                 price=price,
                 costs=costs,
-                exit_timestamp=None,
+                exit_timestamp=exit_timestamp,
                 pnl=float(realised_pnl),
             )
             trades.append(trade)
+            if closed_position:
+                closing_trades.append(trade)
 
         portfolio_value = cash + sum(positions[symbol] * prices_row[symbol] for symbol in symbols)
         equity_points.append((pd.Timestamp(timestamp), float(portfolio_value)))
@@ -169,9 +189,11 @@ def run_backtest(
     else:
         calmar = cagr if cagr > 0 else 0.0
 
-    realised_trades = [trade for trade in trades if trade.action == "sell"]
+    realised_trades = closing_trades
     wins = sum(1 for trade in realised_trades if trade.pnl > 0)
     hit_rate = wins / len(realised_trades) if realised_trades else 0.0
+    trade_rate = len(realised_trades) / years if years > 0 else 0.0
+    avg_hold_days = sum(hold_durations) / len(hold_durations) if hold_durations else 0.0
 
     average_equity = equity_series.mean()
     turnover = total_notional / average_equity if average_equity > 0 else 0.0
@@ -196,6 +218,8 @@ def run_backtest(
         "max_drawdown": float(max_drawdown),
         "hit_rate": float(hit_rate),
         "turnover": float(turnover),
+        "trade_rate": float(trade_rate),
+        "avg_hold_days": float(avg_hold_days),
     }
 
     return BacktestResult(

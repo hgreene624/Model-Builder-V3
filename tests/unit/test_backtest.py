@@ -52,6 +52,8 @@ def test_backtest_produces_equity_and_trades(price_series: pd.DataFrame, signal_
     assert kpis["cagr"] > 0
     assert kpis["max_drawdown"] <= 0
     assert kpis["hit_rate"] == pytest.approx(1.0, rel=1e-6)
+    assert kpis["trade_rate"] == pytest.approx(63.0, rel=1e-6)
+    assert kpis["avg_hold_days"] == pytest.approx(2.0, rel=1e-6)
 
 
 def test_backtest_applies_cost_model(price_series: pd.DataFrame, signal_frame: pd.DataFrame) -> None:
@@ -77,4 +79,7 @@ def test_backtest_applies_cost_model(price_series: pd.DataFrame, signal_frame: p
     expected_slippage = abs(last_sell.quantity * last_sell.price) * 0.0025
     assert last_sell.costs["slippage"] == pytest.approx(expected_slippage, rel=1e-6)
     assert last_sell.costs["total"] == pytest.approx(5.0 + expected_slippage, rel=1e-6)
+    assert last_sell.exit_timestamp is not None
     assert result.equity_curve[-1]["equity"] < baseline.equity_curve[-1]["equity"]
+    assert result.kpis["trade_rate"] == pytest.approx(baseline.kpis["trade_rate"], rel=1e-6)
+    assert result.kpis["avg_hold_days"] == pytest.approx(baseline.kpis["avg_hold_days"], rel=1e-6)

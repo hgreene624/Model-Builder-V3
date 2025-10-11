@@ -46,6 +46,7 @@ Follow-up TODOs:
 - Quickstart guides, configuration docs, and README entries MUST be updated alongside feature work to remain accurate.
 - Telemetry hooks (logging, metrics, checkpoints) SHOULD reuse shared utilities to guarantee consistent formatting and log destinations.
 
+
 ## Additional Constraints & Standards
 
 - Virtual environments MUST isolate dependencies (`python -m venv .venv`); dependencies are pinned via `requirements.txt` and reviewed quarterly.

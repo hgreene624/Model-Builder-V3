@@ -121,6 +121,11 @@ As a researcher, I take a stored genome, run a fresh simulation, review KPIs, an
 - **FR-013**: System MUST persist artifacts in a predictable directory structure (e.g., `data/portfolios/`, `data/models/`, `data/logs/`, `data/runs/`).
 - **FR-014**: UI and services MUST follow Python 3.12 best practices: type-annotated services, dataclass-based configs, async-friendly IO when streaming progress.
 - **FR-015**: Error handling MUST provide user-facing alerts with remediation steps (credentials missing, data gaps, contract violations).
+- **FR-016**: All model weights and params should comprehensively be documented to describe what they are and how changing them will impact the model in a .md file in a /docs directory
+- **FR-017**: All UI exposed model parameters and user modified parameters should have breif streamlit tooltips with examples of what the impact of changing them up or down will do
+- **FR-018**: all model weights and parameters should be given default values that represent a best guess at standard values for that param. 
+- **FR-019**: min and max UI params should use min-max sliders to define range
+- **FR-020**: UI paramter entry fields should be reasonably condensed to save space. a single field does not need to span the entire width and can be positioned next to other params if the field title and data type allow
 
 ### Key Entities *(include if feature involves data)*
 

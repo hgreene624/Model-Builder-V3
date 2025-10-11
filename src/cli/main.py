@@ -5,6 +5,7 @@ import typer
 from src.config.settings import AppSettings
 from src.home.dashboard import collect_home_summary
 from src.cli.portfolio_cli import portfolio_app
+from src.cli.optimizer_cli import optimizer_app
 
 app = typer.Typer(help="Model Builder CLI")
 
@@ -25,12 +26,8 @@ def status() -> None:
     )
 
 
-@app.command("optimize")
-def optimize() -> None:  # pragma: no cover
-    typer.echo("Optimization CLI will be implemented in a later phase.")
-
-
 app.add_typer(portfolio_app, name="portfolio")
+app.add_typer(optimizer_app, name="optimize")
 
 
 if __name__ == "__main__":
