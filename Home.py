@@ -50,25 +50,25 @@ def render_sections(summary: HomeSummary) -> None:
             "Recent Portfolios",
             summary.portfolios,
             "No portfolios saved yet.",
-            "/1_Portfolio_Curator",
+            "pages/1_Portfolio_Curator.py",
         ),
         (
             "Recent Parameter Sets",
             summary.parameter_sets,
             "No parameter sets saved yet.",
-            "/2_Model_Builder",
+            "pages/2_Model_Builder.py",
         ),
         (
             "Recent Simulations",
             summary.simulations,
             "No simulation runs recorded yet.",
-            "/4_Simulation_Review",
+            "pages/4_Simulation_Review.py",
         ),
         (
             "Optimizer Logs",
             summary.logs,
             "No optimizer logs available yet.",
-            "/3_Log_Inspector",
+            "pages/3_Log_Inspector.py",
         ),
     ]
 
