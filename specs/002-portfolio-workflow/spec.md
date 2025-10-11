@@ -48,6 +48,7 @@ Portfolio curation is the first step in every workflow. Researchers will iterate
 - Threshold inputs (median price, median dollar volume) filter the working table before selection.
 - Draft portfolio supports add/remove of individual symbols; duplicates are prevented.
 - Saved portfolio schema extends existing Portfolio contract with new metadata fields as needed.
+- Persist and load portfolio artifacts exclusively as JSON files under `storage/portfolios/`; CSV storage is out of scope.
 - Provide delete controls for existing portfolios with confirmation.
 - Saving a portfolio with a previously used name overwrites the existing artifact to ensure subsequent edits target the latest version.
 - CLI parity: `portfolio curate` gains options for universe pick and thresholds; `portfolio delete` CLI removes saved artifacts.

@@ -29,6 +29,6 @@
 - [X] T404 Extend CLI `portfolio curate`/`portfolio delete` to support new workflow parameters.
 
 ## Phase 5: QA & Docs
-- [ ] T501 Update documentation / README with new workflow instructions.
-- [ ] T502 Add/refresh tests: unit, integration, CLI for the new flow.
-- [ ] T503 Run full regression (`pytest`, lint) and summarize release notes.
+- [X] T501 Update documentation / README with new workflow instructions.
+- [X] T502 Add/refresh tests: unit, integration, CLI for the new flow.
+- [X] T503 Run full regression (`pytest`, lint) and summarize release notes.

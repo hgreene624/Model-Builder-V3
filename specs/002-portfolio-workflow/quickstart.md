@@ -25,15 +25,20 @@ streamlit run src/model_builder/portfolio_workflow/streamlit_app.py
 ## Run CLI commands
 ```bash
 source .venv/bin/activate
-python -m model_builder.portfolio_workflow.cli curate \
-  --universe sp500 \
-  --text-query "energy" \
-  --max-symbols 30 \
-  --price-floor 5 \
-  --volume-floor 1e6
+export DATA_DIR=$(pwd)/storage
 
-python -m model_builder.portfolio_workflow.cli delete --name sp500-energy
+python -m src.cli.main portfolio curate \
+  --universe sp500 \
+  --search "energy" \
+  --sectors "Energy,Utilities" \
+  --min-price 5 \
+  --min-dollar-volume 1000000 \
+  --max-count 30 \
+  --name "SP500 Energy Screen"
+
+python -m src.cli.main portfolio delete "SP500 Energy Screen"
 ```
+- To curate from seeds or CSVs instead of an index, swap `--universe` for `--seed <name>` or `--csv path/to/file.csv`; the liquidity threshold flags (`--min-price`, `--min-dollar-volume`) work in both modes.
 
 ## Testing
 ```bash

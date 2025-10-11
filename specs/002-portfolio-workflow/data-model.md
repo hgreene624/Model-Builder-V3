@@ -107,6 +107,8 @@
 - **Relationships**
   - Persisted to `storage/portfolios/<normalized_name>.json`.
   - Overwrites earlier artifact when the same `name` is reused.
+- **Storage Format**
+  - Artifact is stored and exchanged strictly as JSON; CSV or alternative encodings are not permitted.
 - **Validation Rules**
   - `schema_version` must match latest contract.
   - `symbols` list must not be empty.

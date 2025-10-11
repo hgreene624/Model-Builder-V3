@@ -21,7 +21,7 @@ def test_portfolio_cli_requires_source(tmp_path: Path) -> None:
     runner = CliRunner()
     result = runner.invoke(app, ["portfolio", "curate"], env={"DATA_DIR": str(tmp_path / "storage")})
     assert result.exit_code != 0
-    assert "Provide either" in result.stdout
+    assert "Provide a universe" in result.stdout
 
 
 def test_portfolio_cli_saves(tmp_path: Path, monkeypatch) -> None:
