@@ -77,7 +77,7 @@
 
 ### Implementation
 - [x] T304 [US3] Implement ATR breakout strategy in `src/engine/atr_breakout.py` with risk-aware sizing toggle
-- [ ] T305 [US3] Build backtest engine `src/engine/backtest.py` returning `BacktestResult` with KPI calculations
+- [x] T305 [US3] Build backtest engine `src/engine/backtest.py` returning `BacktestResult` with KPI calculations
 - [ ] T306 [US3] Implement optimizer driver `src/optimizer/evolutionary.py` (multiprocessing evaluation, weighted objective, gates)
 - [ ] T307 [US3] Implement telemetry publisher `src/optimizer/telemetry.py` integrating with `TrainingLogger`
 - [ ] T308 [US3] Create Streamlit page `pages/2_Model_Builder.py` with parameter controls, bounds, telemetry display, save genome actions
