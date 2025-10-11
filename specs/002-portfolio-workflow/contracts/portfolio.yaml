@@ -1,0 +1,405 @@
+openapi: 3.1.0
+info:
+  title: Portfolio Workflow Service
+  version: 0.1.0
+  description: >
+    Thin service contract describing portfolio universe access, liquidity enrichment,
+    and saved portfolio management to mirror Streamlit/CLI behaviors.
+servers:
+  - url: http://localhost:8000
+paths:
+  /universes:
+    get:
+      summary: List available index universes
+      operationId: listUniverses
+      responses:
+        '200':
+          description: Available universes and metadata.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  universes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/IndexUniverseSummary'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /universes/{name}:
+    get:
+      summary: Fetch universe symbols
+      operationId: getUniverse
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Loaded universe with symbols.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IndexUniverse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /liquidity:
+    post:
+      summary: Enrich tickers with liquidity statistics
+      operationId: fetchLiquidity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - tickers
+                - priorsWindow
+              properties:
+                tickers:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: string
+                priorsWindow:
+                  $ref: '#/components/schemas/DateWindow'
+      responses:
+        '200':
+          description: Liquidity snapshots for requested tickers.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  snapshots:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LiquiditySnapshot'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '503':
+          description: Upstream market data providers unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /portfolios:
+    get:
+      summary: List saved portfolios
+      operationId: listPortfolios
+      responses:
+        '200':
+          description: Saved artifacts overview.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  portfolios:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PortfolioSummary'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      summary: Save or overwrite a portfolio
+      operationId: savePortfolio
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavePortfolioRequest'
+      responses:
+        '201':
+          description: Portfolio saved (new or overwritten).
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /portfolios/{name}:
+    delete:
+      summary: Delete a saved portfolio by name
+      operationId: deletePortfolio
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Portfolio removed.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  responses:
+    BadRequest:
+      description: Invalid request payload.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Requested resource not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalError:
+      description: Unexpected error processing request.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    IndexUniverseSummary:
+      type: object
+      required:
+        - name
+        - symbolCount
+      properties:
+        name:
+          type: string
+        symbolCount:
+          type: integer
+          minimum: 1
+        asOf:
+          type: string
+          format: date
+    IndexUniverse:
+      type: object
+      required:
+        - name
+        - sourcePath
+        - symbols
+      properties:
+        name:
+          type: string
+        sourcePath:
+          type: string
+        asOf:
+          type: string
+          format: date
+          nullable: true
+        symbols:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/SymbolRecord'
+    SymbolRecord:
+      type: object
+      required:
+        - ticker
+      properties:
+        ticker:
+          type: string
+        name:
+          type: string
+          nullable: true
+        sector:
+          type: string
+          nullable: true
+        industry:
+          type: string
+          nullable: true
+        marketCap:
+          type: number
+          nullable: true
+          minimum: 0
+        coverageStatus:
+          type: string
+          enum: [complete, partial, missing]
+        coverageWindow:
+          $ref: '#/components/schemas/DateWindow'
+        medianPrice:
+          type: number
+          nullable: true
+          minimum: 0
+        medianDollarVolume:
+          type: number
+          nullable: true
+          minimum: 0
+        filtersApplied:
+          $ref: '#/components/schemas/FilterSettings'
+    FilterSettings:
+      type: object
+      properties:
+        textQuery:
+          type: string
+        sectors:
+          type: array
+          items:
+            type: string
+        marketCapLimit:
+          type: number
+          nullable: true
+          minimum: 0
+        priceFloor:
+          type: number
+          nullable: true
+          minimum: 0
+        volumeFloor:
+          type: number
+          nullable: true
+          minimum: 0
+    DateWindow:
+      type: object
+      required:
+        - start
+        - end
+      properties:
+        start:
+          type: string
+          format: date
+        end:
+          type: string
+          format: date
+    LiquiditySnapshot:
+      type: object
+      required:
+        - ticker
+        - medianPrice
+        - medianDollarVolume
+        - coverageWindow
+        - missingFraction
+      properties:
+        ticker:
+          type: string
+        medianPrice:
+          type: number
+          minimum: 0
+        medianDollarVolume:
+          type: number
+          minimum: 0
+        coverageWindow:
+          $ref: '#/components/schemas/DateWindow'
+        missingFraction:
+          type: number
+          minimum: 0
+          maximum: 1
+    SavePortfolioRequest:
+      type: object
+      required:
+        - name
+        - universeName
+        - priorsWindow
+        - symbols
+        - filters
+        - aggregates
+        - shardHints
+      properties:
+        name:
+          type: string
+        universeName:
+          type: string
+        priorsWindow:
+          $ref: '#/components/schemas/DateWindow'
+        symbols:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/SymbolRecord'
+        filters:
+          $ref: '#/components/schemas/FilterSettings'
+        aggregates:
+          $ref: '#/components/schemas/PortfolioAggregates'
+        shardHints:
+          $ref: '#/components/schemas/ShardHints'
+        overwrite:
+          type: boolean
+          default: true
+    PortfolioAggregates:
+      type: object
+      required:
+        - symbolCount
+      properties:
+        symbolCount:
+          type: integer
+          minimum: 0
+        medianPriceAvg:
+          type: number
+          nullable: true
+        medianDollarVolumeAvg:
+          type: number
+          nullable: true
+        coverageGapCount:
+          type: integer
+          minimum: 0
+    PortfolioSummary:
+      type: object
+      required:
+        - name
+        - universeName
+        - symbolCount
+        - priorsWindow
+        - schemaVersion
+        - coverageGapCount
+        - shardHints
+        - updatedAt
+      properties:
+        name:
+          type: string
+        universeName:
+          type: string
+        symbolCount:
+          type: integer
+          minimum: 0
+        priorsWindow:
+          $ref: '#/components/schemas/DateWindow'
+        schemaVersion:
+          type: string
+        coverageGapCount:
+          type: integer
+          minimum: 0
+        shardHints:
+          $ref: '#/components/schemas/ShardHints'
+        updatedAt:
+          type: string
+          format: date-time
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+    ShardHints:
+      type: object
+      required:
+        - cacheKey
+        - segments
+      properties:
+        cacheKey:
+          type: string
+          description: Identifier for the warmed OHLCV cache shard.
+        segments:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required:
+              - symbolCount
+              - start
+              - end
+            properties:
+              symbolCount:
+                type: integer
+                minimum: 0
+              start:
+                type: string
+                format: date
+              end:
+                type: string
+                format: date
