@@ -1,11 +1,42 @@
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from datetime import timedelta
-from typing import Callable, Dict
+from typing import Callable, Dict, List, Optional
 
 import pandas as pd
 
 from src.data.cache import MarketDataCache
+
+
+@dataclass
+class FetchAttempt:
+    provider: str
+    success: bool
+    error: str | None = None
+
+
+@dataclass
+class SymbolDiagnostics:
+    symbol: str
+    start: str
+    end: str
+    interval: str
+    warmup_start: str
+    cache_hit: str | None = None
+    final_provider: str | None = None
+    rows_returned: int | None = None
+    exception_message: str | None = None
+    attempts: List[FetchAttempt] = field(default_factory=list)
+
+    def to_summary(self) -> dict[str, object]:
+        return {
+            "symbol": self.symbol,
+            "cache_hit": self.cache_hit or "",
+            "provider": self.final_provider or "",
+            "rows": self.rows_returned or 0,
+            "error": self.exception_message or "",
+        }
 
 
 class MarketDataLoader:
@@ -51,21 +82,123 @@ class MarketDataLoader:
         provider_name = provider or self.default_provider
         warmup_start = self._apply_warmup(start, warmup_bars, interval)
 
+        frame, _, error = self._load_internal(
+            symbol=symbol,
+            start=start,
+            end=end,
+            interval=interval,
+            warmup_start=warmup_start,
+            provider_name=provider_name,
+        )
+        if error is not None:
+            raise error
+        return frame
+
+    def load_with_diagnostics(
+        self,
+        symbol: str,
+        start: str,
+        end: str,
+        *,
+        interval: str = "1d",
+        warmup_bars: int = 0,
+        provider: str | None = None,
+    ) -> tuple[pd.DataFrame, SymbolDiagnostics]:
+        provider_name = provider or self.default_provider
+        warmup_start = self._apply_warmup(start, warmup_bars, interval)
+        frame, diagnostics, _ = self._load_internal(
+            symbol=symbol,
+            start=start,
+            end=end,
+            interval=interval,
+            warmup_start=warmup_start,
+            provider_name=provider_name,
+            suppress_errors=True,
+        )
+        return frame, diagnostics
+
+    def _load_internal(
+        self,
+        *,
+        symbol: str,
+        start: str,
+        end: str,
+        interval: str,
+        warmup_start: str,
+        provider_name: str,
+        suppress_errors: bool = False,
+    ) -> tuple[pd.DataFrame, SymbolDiagnostics, Optional[Exception]]:
+        diagnostics = SymbolDiagnostics(
+            symbol=symbol,
+            start=start,
+            end=end,
+            interval=interval,
+            warmup_start=warmup_start,
+        )
+        error: Exception | None = None
+
         memory = self.cache.get_memory(symbol, interval)
         if memory is not None and start >= warmup_start:
-            return memory.loc[start:end]
+            subset = memory.loc[start:end]
+            if not subset.empty:
+                diagnostics.cache_hit = "memory"
+                diagnostics.final_provider = "memory"
+                diagnostics.rows_returned = int(subset.shape[0])
+                return subset, diagnostics, None
+            diagnostics.cache_hit = "memory-empty"
+            self.cache.drop_memory(symbol, interval)
 
         disk = self.cache.load_disk(symbol, interval, warmup_start, end)
         if disk is not None:
-            self.cache.store_memory(symbol, interval, disk)
-            return disk.loc[start:end]
+            subset = disk.loc[start:end]
+            if not subset.empty:
+                self.cache.store_memory(symbol, interval, disk)
+                diagnostics.cache_hit = "disk"
+                diagnostics.final_provider = "disk"
+                diagnostics.rows_returned = int(subset.shape[0])
+                return subset, diagnostics, None
+            diagnostics.cache_hit = "disk-empty"
+            self.cache.delete_disk(symbol, interval, warmup_start, end)
 
-        fetcher = self._resolve_provider(provider_name)
-        frame = fetcher(symbol, warmup_start, end, interval)
+        diagnostics.cache_hit = diagnostics.cache_hit or "miss"
+        active_provider = provider_name
+        fetcher = self._resolve_provider(active_provider)
+
+        try:
+            frame = fetcher(symbol, warmup_start, end, interval)
+            diagnostics.attempts.append(FetchAttempt(provider=active_provider, success=True))
+            diagnostics.final_provider = active_provider
+        except Exception as exc:
+            diagnostics.attempts.append(FetchAttempt(provider=active_provider, success=False, error=str(exc)))
+            if active_provider != "yahoo" and "yahoo" in self.providers:
+                active_provider = "yahoo"
+                fetcher = self._resolve_provider(active_provider)
+                try:
+                    frame = fetcher(symbol, warmup_start, end, interval)
+                    diagnostics.attempts.append(FetchAttempt(provider=active_provider, success=True))
+                    diagnostics.final_provider = active_provider
+                except Exception as fallback_exc:
+                    diagnostics.attempts.append(
+                        FetchAttempt(provider=active_provider, success=False, error=str(fallback_exc))
+                    )
+                    diagnostics.exception_message = str(fallback_exc)
+                    error = fallback_exc
+                    empty = pd.DataFrame()
+                    diagnostics.rows_returned = 0
+                    return empty, diagnostics, None if suppress_errors else error
+            else:
+                diagnostics.exception_message = str(exc)
+                error = exc
+                empty = pd.DataFrame()
+                diagnostics.rows_returned = 0
+                return empty, diagnostics, None if suppress_errors else error
+
         frame = frame.sort_index()
         if frame.index.tz is None:
             frame.index = frame.index.tz_localize("UTC")
 
         self.cache.store_memory(symbol, interval, frame)
         self.cache.store_disk(symbol, interval, warmup_start, end, frame)
-        return frame.loc[start:end]
+        final_frame = frame.loc[start:end]
+        diagnostics.rows_returned = int(final_frame.shape[0])
+        return final_frame, diagnostics, None

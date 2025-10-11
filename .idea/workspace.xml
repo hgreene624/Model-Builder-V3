@@ -4,21 +4,23 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="3a0f8e7c-00d9-4699-9f00-5cef80cd1d44" name="Changes" comment="phase 1 done">
-      <change afterPath="$PROJECT_DIR$/src/home/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/home/dashboard.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/storage/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/storage/artifacts.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/storage/layout.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/unit/test_home_summary.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+    <list default="true" id="3a0f8e7c-00d9-4699-9f00-5cef80cd1d44" name="Changes" comment="Home.py framework set up. Phase 3 done">
+      <change afterPath="$PROJECT_DIR$/src/cli/portfolio_cli.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/portfolio/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/portfolio/seeds.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/portfolio/services.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/integration/test_portfolio_save.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/unit/test_portfolio_builder.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/unit/test_portfolio_cli.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Home.py" beforeDir="false" afterPath="$PROJECT_DIR$/Home.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pages/1_Portfolio_Curator.py" beforeDir="false" afterPath="$PROJECT_DIR$/pages/1_Portfolio_Curator.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/specs/001-build-a-self/tasks.md" beforeDir="false" afterPath="$PROJECT_DIR$/specs/001-build-a-self/tasks.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/cli/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/cli/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/unit/test_artifacts.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/test_artifacts.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/unit/test_cli.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/test_cli.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/unit/test_storage_layout.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/test_storage_layout.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/config/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/config/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/loader.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/loader.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/providers/alpaca_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/providers/alpaca_client.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_loader.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/test_loader.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/test_settings.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -59,6 +61,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "git-widget-placeholder": "001-build-a-self",
+    "last_opened_file_path": "/Users/holdengreene/PycharmProjects/Model Builder V3",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -67,6 +70,11 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+    </key>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -82,7 +90,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1760113323568</updated>
-      <workItem from="1760113324627" duration="10881000" />
+      <workItem from="1760113324627" duration="17118000" />
     </task>
     <task id="LOCAL-00001" summary="Project Created">
       <option name="closed" value="true" />
@@ -156,7 +164,15 @@
       <option name="project" value="LOCAL" />
       <updated>1760126895852</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="Home.py framework set up. Phase 3 done">
+      <option name="closed" value="true" />
+      <created>1760127537604</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1760127537604</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -171,6 +187,7 @@
     <MESSAGE value="tasks" />
     <MESSAGE value="phase 0 done" />
     <MESSAGE value="phase 1 done" />
-    <option name="LAST_COMMIT_MESSAGE" value="phase 1 done" />
+    <MESSAGE value="Home.py framework set up. Phase 3 done" />
+    <option name="LAST_COMMIT_MESSAGE" value="Home.py framework set up. Phase 3 done" />
   </component>
 </project>

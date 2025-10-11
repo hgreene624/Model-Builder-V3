@@ -4,6 +4,7 @@ import typer
 
 from src.config.settings import AppSettings
 from src.home.dashboard import collect_home_summary
+from src.cli.portfolio_cli import portfolio_app
 
 app = typer.Typer(help="Model Builder CLI")
 
@@ -24,14 +25,12 @@ def status() -> None:
     )
 
 
-@app.command("portfolio")
-def portfolio() -> None:  # pragma: no cover - placeholder for future implementation
-    typer.echo("Portfolio commands will arrive in Phase 3 (use the Streamlit UI for now).")
-
-
 @app.command("optimize")
 def optimize() -> None:  # pragma: no cover
     typer.echo("Optimization CLI will be implemented in a later phase.")
+
+
+app.add_typer(portfolio_app, name="portfolio")
 
 
 if __name__ == "__main__":

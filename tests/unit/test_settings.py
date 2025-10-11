@@ -14,6 +14,17 @@ def test_settings_defaults(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("PREFERRED_PROVIDER", raising=False)
     monkeypatch.delenv("ALPACA_KEY_ID", raising=False)
     monkeypatch.delenv("ALPACA_SECRET_KEY", raising=False)
+    monkeypatch.delenv("ALPACA_API_KEY", raising=False)
+    monkeypatch.delenv("APCA_API_KEY_ID", raising=False)
+    monkeypatch.delenv("APCA_API_SECRET_KEY", raising=False)
+    monkeypatch.delenv("ALPACA_API_BASE_URL", raising=False)
+    monkeypatch.delenv("APCA_API_BASE_URL", raising=False)
+
+    import sys
+    import types
+
+    dummy_streamlit = types.SimpleNamespace(secrets={})
+    monkeypatch.setitem(sys.modules, "streamlit", dummy_streamlit)
 
     settings = AppSettings.from_env()
 

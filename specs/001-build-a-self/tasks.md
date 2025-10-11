@@ -51,15 +51,17 @@
 **Independent Test**: Run through portfolio creation using sample CSV and confirm saved JSON matches filters and coverage metadata.
 
 ### Tests
-- [ ] T201 [P] Add unit tests for filter logic and liquidity stats in `tests/unit/test_portfolio_builder.py`
-- [ ] T202 [P] Add integration test `tests/integration/test_portfolio_save.py` to ensure saved artifact includes provenance
+- [x] T201 [P] Add unit tests for filter logic and liquidity stats in `tests/unit/test_portfolio_builder.py`
+- [x] T202 [P] Add integration test `tests/integration/test_portfolio_save.py` to ensure saved artifact includes provenance
+- [x] T206A [P] Add unit test for `portfolio curate` CLI command in `tests/unit/test_portfolio_cli.py`
 
 ### Implementation
-- [ ] T203 [US2] Implement `pages/1_Portfolio_Curator.py` with seed list import, filters, preview table, capped ticker selection
-- [ ] T204 [US2] Extend loader to compute liquidity stats (median price, dollar volume) using cached shards
-- [ ] T205 [US2] Implement `src/storage/artifacts.py` helpers for creating/updating `Portfolio` artifacts with schema version
-- [ ] T206 [US2] Add CLI command `portfolio curate` supporting CSV/index seeds and same filters
-- [ ] T207 [US2] Provide provenance display in UI (filters, coverage window, tickers count) after save
+- [x] T203 [US2] Implement `pages/1_Portfolio_Curator.py` with seed list import, filters, preview table, capped ticker selection
+- [x] T204 [US2] Extend loader to compute liquidity stats (median price, dollar volume) using cached shards
+- [x] T205 [US2] Implement `src/storage/artifacts.py` helpers for creating/updating `Portfolio` artifacts with schema version
+- [x] T206 [US2] Add CLI command `portfolio curate` supporting CSV/index seeds and same filters
+- [x] T207 [US2] Provide provenance display in UI (filters, coverage window, tickers count) after save
+- [x] T208 [US2] Add Portfolio Curator debug diagnostics (cache/provider attempts, error reporting toggle) to aid data-source troubleshooting
 
 ---
 

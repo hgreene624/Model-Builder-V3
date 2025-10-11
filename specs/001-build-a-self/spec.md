@@ -42,6 +42,7 @@ A researcher assembles a stock universe from common indexes or imported lists, f
 
 1. **Given** a selected seed list, **When** the user applies liquidity and sector filters, **Then** the preview updates with the filtered tickers and displays median price and dollar volume for the configured window.
 2. **Given** the filtered universe, **When** the user saves the portfolio, **Then** the saved record includes applied filters, data coverage dates, ticker count, and a normalized ticker file.
+3. **Given** network or credential issues during preview, **When** the user enables diagnostics, **Then** the UI surfaces per-symbol fetch attempts (cache hit state, provider used, and error text) so remediation steps are clear.
 
 ---
 
