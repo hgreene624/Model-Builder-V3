@@ -1,0 +1,40 @@
+{
+  "coverage_window": {
+    "end": "2025-10-10",
+    "start": "2020-10-11"
+  },
+  "description": null,
+  "filters": {
+    "exclude": "",
+    "include": "",
+    "max_count": 100
+  },
+  "liquidity_stats": {
+    "median_dollar_volume": 85262582.46000001,
+    "median_price": 227.59,
+    "symbols_covered": 15
+  },
+  "name": "S&P Growth 15 Universe",
+  "notes": [],
+  "portfolio_id": "21169702-5c9c-49dd-8a46-f3fef271d0e7",
+  "schema_version": "1.0.0",
+  "seed_reference": "S&P Growth 15",
+  "source": "seed",
+  "tickers": [
+    "AAPL",
+    "MSFT",
+    "GOOGL",
+    "AMZN",
+    "META",
+    "NVDA",
+    "TSLA",
+    "AVGO",
+    "NFLX",
+    "ADBE",
+    "CRM",
+    "AMD",
+    "INTC",
+    "ORCL",
+    "CSCO"
+  ]
+}
