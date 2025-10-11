@@ -71,12 +71,12 @@
 **Independent Test**: Execute optimization on sample portfolio; verify telemetry stream, saved parameter set, and holdout equity chart.
 
 ### Tests
-- [ ] T301 [P] Unit tests for ATR strategy sizing and signal generation `tests/unit/test_atr_breakout.py`
-- [ ] T302 [P] Unit tests for evolutionary objective weighting and constraints `tests/unit/test_evolutionary.py`
-- [ ] T303 [P] Integration test `tests/integration/test_optimizer_run.py` verifying telemetry output and saved genome
+- [x] T301 [P] Unit tests for ATR strategy sizing and signal generation `tests/unit/test_atr_breakout.py`
+- [x] T302 [P] Unit tests for evolutionary objective weighting and constraints `tests/unit/test_evolutionary.py`
+- [x] T303 [P] Integration test `tests/integration/test_optimizer_run.py` verifying telemetry output and saved genome
 
 ### Implementation
-- [ ] T304 [US3] Implement ATR breakout strategy in `src/engine/atr_breakout.py` with risk-aware sizing toggle
+- [x] T304 [US3] Implement ATR breakout strategy in `src/engine/atr_breakout.py` with risk-aware sizing toggle
 - [ ] T305 [US3] Build backtest engine `src/engine/backtest.py` returning `BacktestResult` with KPI calculations
 - [ ] T306 [US3] Implement optimizer driver `src/optimizer/evolutionary.py` (multiprocessing evaluation, weighted objective, gates)
 - [ ] T307 [US3] Implement telemetry publisher `src/optimizer/telemetry.py` integrating with `TrainingLogger`
