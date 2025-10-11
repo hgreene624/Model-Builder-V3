@@ -40,6 +40,31 @@ def normalize_portfolio_id(name: str) -> str:
     return slug or "portfolio"
 
 
+def _clean_filters(filters: Dict[str, object] | None) -> Dict[str, object]:
+    if not filters:
+        return {}
+    cleaned: Dict[str, object] = {}
+    for key, value in filters.items():
+        if value is None:
+            continue
+        if key == "thresholds":
+            thresholds = {
+                threshold_key: threshold_value
+                for threshold_key, threshold_value in (value or {}).items()
+                if threshold_value is not None
+            }
+            if thresholds:
+                cleaned[key] = thresholds
+            continue
+        if key == "sectors":
+            sectors = [sector for sector in (value or []) if sector]
+            if sectors:
+                cleaned[key] = sectors
+            continue
+        cleaned[key] = value
+    return cleaned
+
+
 def apply_filters(
     symbols: Iterable[str],
     *,
@@ -146,7 +171,7 @@ def build_portfolio(
         description=description,
         source=source,
         seed_reference=seed_reference,
-        filters=filters or {},
+        filters=_clean_filters(filters),
         coverage_window={"start": coverage_start, "end": coverage_end},
         tickers=normalized,
         liquidity_stats=stats,

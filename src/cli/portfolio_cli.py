@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Optional
+from typing import Dict, Optional
 
 import typer
 
@@ -12,6 +12,9 @@ from src.data.loader import MarketDataLoader
 from src.models.contracts import Portfolio
 from src.portfolio import services
 from src.portfolio.seeds import SEED_COLLECTIONS
+from src.data.universe_loader import load_universe, UniverseNotFoundError
+from src.portfolio.filters import filter_universe
+from src.portfolio.liquidity import fetch_liquidity
 from src.storage.artifacts import ArtifactStore
 from src.storage.layout import StorageLayout
 
@@ -47,12 +50,23 @@ def _load_symbols(seed: Optional[str], csv: Optional[Path], include: Optional[st
     )
 
 
+def _parse_sectors(raw: Optional[str]) -> list[str]:
+    if not raw:
+        return []
+    return [segment.strip() for segment in raw.split(",") if segment.strip()]
+
+
 @portfolio_app.command("curate")
 def curate(
     seed: Optional[str] = typer.Option(None, help="Seed collection name"),
     csv: Optional[Path] = typer.Option(None, help="Path to CSV with tickers"),
     include: Optional[str] = typer.Option(None, help="Only keep tickers containing substring"),
     exclude: Optional[str] = typer.Option(None, help="Drop tickers containing substring"),
+    universe: Optional[str] = typer.Option(None, help="Universe identifier to load from storage/index_universes"),
+    search: Optional[str] = typer.Option(None, help="Case-insensitive text search for universe filtering"),
+    sectors: Optional[str] = typer.Option(None, help="Comma-separated sector filters when using universes"),
+    min_price: Optional[float] = typer.Option(None, help="Median price floor"),
+    min_dollar_volume: Optional[float] = typer.Option(None, help="Median dollar volume floor"),
     max_count: int = typer.Option(100, min=10, max=500, help="Cap on universe size"),
     start: str = typer.Option("2020-01-01", help="Coverage start (YYYY-MM-DD)"),
     end: str = typer.Option("2025-01-01", help="Coverage end (YYYY-MM-DD)"),
@@ -62,30 +76,95 @@ def curate(
 ) -> None:
     """Curate and optionally save a portfolio from seeds or CSV."""
     settings = AppSettings.from_env()
-    if not seed and not csv:
-        raise typer.BadParameter("Provide either --seed or --csv to supply tickers.")
+    if universe and (seed or csv):
+        raise typer.BadParameter("Use either --universe or seed/csv inputs, not both.")
+    if not any([universe, seed, csv]):
+        raise typer.BadParameter("Provide a universe, seed, or CSV source to supply tickers.")
 
-    symbols = _load_symbols(seed, csv, include)
+    sector_list = _parse_sectors(sectors)
+    filters_metadata: Dict[str, object] = {
+        "include": include,
+        "exclude": exclude,
+        "max_count": max_count,
+    }
+    thresholds_requested: Dict[str, float] = {}
+    if min_price is not None:
+        thresholds_requested["price_floor"] = float(min_price)
+    if min_dollar_volume is not None:
+        thresholds_requested["volume_floor"] = float(min_dollar_volume)
+
+    if universe:
+        universe_dir = settings.data_dir / "index_universes"
+        try:
+            universe_model = load_universe(universe, directory=universe_dir)
+        except UniverseNotFoundError as exc:
+            raise typer.BadParameter(str(exc)) from exc
+        frame, _ = filter_universe(
+            universe_model,
+            search=search,
+            sectors=sector_list,
+            max_symbols=max_count,
+        )
+        symbols = frame.index.tolist()
+        filters_metadata["search"] = search
+        if sector_list:
+            filters_metadata["sectors"] = sector_list
+        filters_metadata["universe"] = {
+            "identifier": universe,
+            "name": universe_model.name,
+        }
+    else:
+        symbols = _load_symbols(seed, csv, include)
+        if exclude:
+            symbols = services.apply_filters(symbols, exclude_substring=exclude)
+        if not symbols:
+            raise typer.Exit("No tickers left after applying filters.")
+        symbols = symbols[:max_count]
+        if sector_list:
+            filters_metadata["sectors"] = sector_list
+
     if exclude:
         symbols = services.apply_filters(symbols, exclude_substring=exclude)
     if not symbols:
         raise typer.Exit("No tickers left after applying filters.")
 
     loader = _build_loader(settings)
+
+    removed_by_thresholds = 0
+    if thresholds_requested:
+        liquidity_frame, summary, errors = fetch_liquidity(loader, symbols, start, end)
+        if errors:
+            for err in errors[:5]:
+                typer.echo(f"[warn] {err['symbol']}: {err['error']}")
+        filtered = liquidity_frame.copy()
+        if min_price is not None:
+            filtered = filtered[filtered["median_price"].fillna(0) >= min_price]
+        if min_dollar_volume is not None:
+            filtered = filtered[filtered["median_dollar_volume"].fillna(0) >= min_dollar_volume]
+        retained = filtered.index.tolist()
+        removed_by_thresholds = len(symbols) - len(retained)
+        symbols = [symbol for symbol in symbols if symbol in retained]
+        symbols = symbols[:max_count]
+        if not symbols:
+            typer.echo("No tickers met the requested liquidity thresholds.")
+            raise typer.Exit(code=1)
+
+    source_type = "universe" if universe else ("seed" if seed else "manual")
+    default_name = name or (f"{universe} Portfolio" if universe else (f"{seed} Universe" if seed else "CLI Portfolio"))
+
     portfolio, preview = services.build_portfolio(
-        name=name or (f"{seed} Universe" if seed else "CLI Portfolio"),
+        name=default_name,
         description=description,
-        source="seed" if seed else "manual",
-        seed_reference=seed,
+        source=source_type,
+        seed_reference=universe or seed,
         symbols=symbols,
         max_count=max_count,
         coverage_start=start,
         coverage_end=end,
         loader=loader,
         filters={
-            "include": include,
-            "exclude": exclude,
-            "max_count": max_count,
+            **filters_metadata,
+            "thresholds": thresholds_requested or None,
         },
     )
 
@@ -100,6 +179,14 @@ def curate(
         store = ArtifactStore(layout=layout)
         store.save_portfolio(portfolio)
         typer.echo(f"Portfolio saved under {settings.data_dir / 'portfolios'}")
+
+    if thresholds_requested:
+        typer.echo(
+            "Applied thresholds: "
+            + ", ".join(f"{key}={value}" for key, value in thresholds_requested.items())
+        )
+        if removed_by_thresholds:
+            typer.echo(f"Pruned {removed_by_thresholds} tickers that failed thresholds.")
 
 
 @portfolio_app.command("delete")

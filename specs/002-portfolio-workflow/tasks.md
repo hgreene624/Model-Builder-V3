@@ -26,7 +26,7 @@
 - [X] T401 Update `Portfolio` contract + storage helpers to include coverage + shard hints (bump schema_version).
 - [X] T402 Implement “Save Portfolio” action with confirmation and success messaging.
 - [X] T403 Add delete controls (UI + CLI) and ensure storage cleanup + UI refresh.
-- [ ] T404 Extend CLI `portfolio curate`/`portfolio delete` to support new workflow parameters.
+- [X] T404 Extend CLI `portfolio curate`/`portfolio delete` to support new workflow parameters.
 
 ## Phase 5: QA & Docs
 - [ ] T501 Update documentation / README with new workflow instructions.
