@@ -15,6 +15,7 @@ class ArtifactStore:
 
     # Portfolios ------------------------------------------------------
     def save_portfolio(self, portfolio: Portfolio) -> Path:
+        portfolio.touch()
         path = self.layout.portfolio_path(portfolio.portfolio_id)
         tmp = path.with_suffix(".json.tmp")
         tmp.write_text(json.dumps(asdict(portfolio), indent=2, sort_keys=True))
@@ -26,15 +27,23 @@ class ArtifactStore:
         if not path.exists():
             return None
         data = json.loads(path.read_text())
-        return Portfolio(**data)
+        return Portfolio.from_dict(data)
 
     def list_portfolios(self, limit: int = 5) -> List[Portfolio]:
         directory = self.layout.portfolios_directory()
         files = sorted(directory.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
         portfolios: List[Portfolio] = []
         for path in files[:limit]:
-            portfolios.append(Portfolio(**json.loads(path.read_text())))
+            payload = json.loads(path.read_text())
+            portfolios.append(Portfolio.from_dict(payload))
         return portfolios
+
+    def delete_portfolio(self, portfolio_id: str) -> bool:
+        path = self.layout.portfolio_path(portfolio_id)
+        if not path.exists():
+            return False
+        path.unlink()
+        return True
 
     # Parameter Sets --------------------------------------------------
     def list_parameter_sets(self, limit: int = 5) -> List[ParameterSet]:

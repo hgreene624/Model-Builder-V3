@@ -100,3 +100,18 @@ def curate(
         store = ArtifactStore(layout=layout)
         store.save_portfolio(portfolio)
         typer.echo(f"Portfolio saved under {settings.data_dir / 'portfolios'}")
+
+
+@portfolio_app.command("delete")
+def delete(
+    name: str = typer.Argument(..., help="Portfolio name to delete"),
+) -> None:
+    """Delete a saved portfolio by name."""
+    settings = AppSettings.from_env()
+    layout = StorageLayout(root=settings.data_dir)
+    store = ArtifactStore(layout=layout)
+    portfolio_id = services.normalize_portfolio_id(name)
+    if not store.delete_portfolio(portfolio_id):
+        typer.echo(f"Portfolio '{name}' not found.")
+        raise typer.Exit(code=1)
+    typer.echo(f"Deleted portfolio '{name}'.")

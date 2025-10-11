@@ -24,17 +24,17 @@ Portfolio curation is the first step in every workflow. Researchers will iterate
 ### Independent Test
 
 1. Boot the Portfolios page with supplied index JSON files.  
-2. Select an index, filter down to <=50 symbols via search + sector filters + max cap.  
-3. Fetch liquidity, confirm the table highlights missing coverage and allows selecting multiple tickers.  
-4. Add selections to the pending portfolio, save with provenance, and verify the saved artifact contains the priors window, liquidity stats, and storage hints.  
+2. Select an index, apply search/sector filters, and set a numeric max cap to trim the universe (table previews the filtered universe immediately).  
+3. Configure liquidity and coverage thresholds, choose the fetch date range, click “Fetch data,” and confirm the same table refreshes with liquidity metrics, coverage flags, and threshold-based filtering.  
+4. Add tickers from the updated table to the draft portfolio, review the draft summary table, save with provenance, and verify the saved artifact contains the priors window, liquidity stats, and storage hints.  
 5. Delete an existing saved portfolio and confirm removal from Home and list views.
 
 ## Acceptance Scenarios
 
 1. **Given** the page loads with available index files, **When** I pick “S&P 500,” **Then** the working universe populates from disk and remains cached for subsequent interactions.
-2. **Given** a working list, **When** I apply text search, multi-select sectors, and a max symbol cap, **Then** the table updates immediately and stamps the priors window (start/end) used for context.
-3. **Given** I click “Fetch Liquidity,” **When** data retrieval completes, **Then** each symbol shows median price, dollar volume, and coverage gaps; symbols with insufficient data are flagged.
-4. **Given** the enriched table, **When** I select one or several symbols and click “Add to Portfolio,” **Then** they appear in the draft portfolio list alongside aggregate liquidity stats.
+2. **Given** a working list, **When** I apply text search, multi-select sectors, and set a numeric max symbol cap, **Then** the table updates immediately and stamps the priors window (start/end) used for context.
+3. **Given** the liquidity controls and fetch dates are set, **When** I click “Fetch data,” **Then** the existing table augments each row with liquidity metrics, applies thresholds, and flags coverage gaps.
+4. **Given** the refreshed table is visible, **When** I add symbols from it to the draft portfolio, **Then** they appear in the draft controls and the draft summary table below reflects the current selection.
 5. **Given** a draft portfolio, **When** I save, **Then** the artifact includes normalized tickers, filters applied, priors window, shard hints (cached file metadata), and creation timestamp.
 6. **Given** saved portfolios exist, **When** I choose “Delete” on one, **Then** the portfolio JSON is removed from storage and the UI updates without requiring a manual refresh.
 7. **Given** I attempt to save a portfolio with a name that already exists, **When** I confirm the save, **Then** the previous artifact is overwritten so the latest configuration is preserved without duplicates.
@@ -42,9 +42,10 @@ Portfolio curation is the first step in every workflow. Researchers will iterate
 ## Functional Requirements
 
 - Load index universes from `storage/index_universes/<name>.json` (or similar) and cache them in Streamlit session state.
-- Filtering must support text search, multiple sectors/industries, and max symbol counts.
+- Filtering must support text search, multiple sectors/industries, and numeric max symbol counts, with draft selection gated on the single unified table that updates after the liquidity fetch.
+- Draft portfolio controls must display the current selections in a dedicated table beneath the controls.
 - Liquidity fetch warms the OHLCV cache and records per-symbol coverage windows and shard metadata.
-- Threshold sliders (median price, median dollar volume) filter the working table before selection.
+- Threshold inputs (median price, median dollar volume) filter the working table before selection.
 - Draft portfolio supports add/remove of individual symbols; duplicates are prevented.
 - Saved portfolio schema extends existing Portfolio contract with new metadata fields as needed.
 - Provide delete controls for existing portfolios with confirmation.

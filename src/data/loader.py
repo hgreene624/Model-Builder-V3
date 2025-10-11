@@ -28,6 +28,7 @@ class SymbolDiagnostics:
     rows_returned: int | None = None
     exception_message: str | None = None
     attempts: List[FetchAttempt] = field(default_factory=list)
+    shard_path: str | None = None
 
     def to_summary(self) -> dict[str, object]:
         return {
@@ -103,10 +104,10 @@ class MarketDataLoader:
         interval: str = "1d",
         warmup_bars: int = 0,
         provider: str | None = None,
-    ) -> tuple[pd.DataFrame, SymbolDiagnostics]:
+    ) -> tuple[pd.DataFrame, SymbolDiagnostics, Optional[Exception]]:
         provider_name = provider or self.default_provider
         warmup_start = self._apply_warmup(start, warmup_bars, interval)
-        frame, diagnostics, _ = self._load_internal(
+        frame, diagnostics, error = self._load_internal(
             symbol=symbol,
             start=start,
             end=end,
@@ -115,7 +116,7 @@ class MarketDataLoader:
             provider_name=provider_name,
             suppress_errors=True,
         )
-        return frame, diagnostics
+        return frame, diagnostics, error
 
     def _load_internal(
         self,
@@ -156,6 +157,7 @@ class MarketDataLoader:
                 diagnostics.cache_hit = "disk"
                 diagnostics.final_provider = "disk"
                 diagnostics.rows_returned = int(subset.shape[0])
+                diagnostics.shard_path = str(self.cache._shard_file(symbol, interval, warmup_start, end))  # type: ignore[attr-defined]
                 return subset, diagnostics, None
             diagnostics.cache_hit = "disk-empty"
             self.cache.delete_disk(symbol, interval, warmup_start, end)
@@ -185,20 +187,22 @@ class MarketDataLoader:
                     error = fallback_exc
                     empty = pd.DataFrame()
                     diagnostics.rows_returned = 0
-                    return empty, diagnostics, None if suppress_errors else error
+                    return empty, diagnostics, error
             else:
                 diagnostics.exception_message = str(exc)
                 error = exc
                 empty = pd.DataFrame()
                 diagnostics.rows_returned = 0
-                return empty, diagnostics, None if suppress_errors else error
+                return empty, diagnostics, error
 
         frame = frame.sort_index()
         if frame.index.tz is None:
             frame.index = frame.index.tz_localize("UTC")
 
         self.cache.store_memory(symbol, interval, frame)
-        self.cache.store_disk(symbol, interval, warmup_start, end, frame)
+        shard_path = self.cache.store_disk(symbol, interval, warmup_start, end, frame)
+        if shard_path is not None:
+            diagnostics.shard_path = str(shard_path)
         final_frame = frame.loc[start:end]
         diagnostics.rows_returned = int(final_frame.shape[0])
-        return final_frame, diagnostics, None
+        return final_frame, diagnostics, error

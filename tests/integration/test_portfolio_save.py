@@ -56,6 +56,8 @@ def test_portfolio_save_roundtrip(tmp_path: Path) -> None:
     assert path.exists()
     saved = json.loads(path.read_text())
     assert saved["tickers"] == ["AAPL", "MSFT"]
+    assert saved["coverage_summary"]["start"] == "2024-01-01"
+    assert saved["schema_version"] == "1.1.0"
 
 
 def test_cli_status_counts_with_portfolio(tmp_path: Path) -> None:
@@ -73,6 +75,8 @@ def test_cli_status_counts_with_portfolio(tmp_path: Path) -> None:
         tickers=["AAPL"],
         liquidity_stats={"median_price": 1.0},
         notes=[],
+        coverage_summary={"start": "2020", "end": "2025", "coverage_gap_count": 0},
+        shard_hints={},
     )
     store.save_portfolio(portfolio)
 
@@ -80,3 +84,31 @@ def test_cli_status_counts_with_portfolio(tmp_path: Path) -> None:
     result = runner.invoke(app, ["status"], env={"DATA_DIR": str(storage)})
     assert result.exit_code == 0
     assert "Portfolios: 1" in result.stdout
+
+
+def test_cli_delete_portfolio(tmp_path: Path) -> None:
+    storage = tmp_path / "storage"
+    layout = StorageLayout(root=storage)
+    store = ArtifactStore(layout=layout)
+    portfolio = Portfolio(
+        portfolio_id="deleteme",
+        name="DeleteMe",
+        description=None,
+        source="manual",
+        seed_reference=None,
+        filters={},
+        coverage_window={"start": "2021", "end": "2022"},
+        tickers=["AAPL"],
+        liquidity_stats={"median_price": 1.0, "coverage_gap_count": 0},
+        notes=[],
+        coverage_summary={"start": "2021", "end": "2022", "coverage_gap_count": 0},
+        shard_hints={},
+    )
+    store.save_portfolio(portfolio)
+
+    runner = CliRunner()
+    result = runner.invoke(app, ["portfolio", "delete", "DeleteMe"], env={"DATA_DIR": str(storage)})
+
+    assert result.exit_code == 0
+    assert "Deleted portfolio 'DeleteMe'" in result.stdout
+    assert not (storage / "portfolios" / "deleteme.json").exists()

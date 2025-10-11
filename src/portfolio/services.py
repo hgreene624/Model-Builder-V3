@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import uuid
+import re
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Iterable, List, Optional
 
 import pandas as pd
@@ -32,6 +32,12 @@ def normalize_symbols(symbols: Iterable[str]) -> List[str]:
             seen.add(normalized)
             result.append(normalized)
     return result
+
+
+def normalize_portfolio_id(name: str) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "-", name.strip().lower())
+    slug = slug.strip("-")
+    return slug or "portfolio"
 
 
 def apply_filters(
@@ -66,9 +72,9 @@ def compute_liquidity_table(
     for symbol in symbols:
         try:
             if diagnostics is not None:
-                frame, diag = loader.load_with_diagnostics(symbol, start, end, interval="1d", warmup_bars=0)
+                frame, diag, error = loader.load_with_diagnostics(symbol, start, end, interval="1d", warmup_bars=0)
                 diagnostics.append(diag)
-                if diag.exception_message:
+                if error is not None or diag.exception_message:
                     continue
             else:
                 frame = loader.load(symbol, start, end, interval="1d", warmup_bars=0)
@@ -124,9 +130,18 @@ def build_portfolio(
         loader, normalized, coverage_start, coverage_end, diagnostics=diagnostics
     )
     stats = summarize_stats(table)
+    stats.setdefault("coverage_gap_count", 0)
+
+    coverage_summary = {
+        "start": coverage_start,
+        "end": coverage_end,
+        "coverage_gap_count": stats.get("coverage_gap_count", 0),
+    }
+
+    timestamp = datetime.now(tz=timezone.utc).isoformat()
 
     portfolio = Portfolio(
-        portfolio_id=str(uuid.uuid4()),
+        portfolio_id=normalize_portfolio_id(name or "portfolio"),
         name=name,
         description=description,
         source=source,
@@ -136,6 +151,10 @@ def build_portfolio(
         tickers=normalized,
         liquidity_stats=stats,
         notes=notes or [],
+        coverage_summary=coverage_summary,
+        shard_hints={},
+        created_at=timestamp,
+        updated_at=timestamp,
     )
 
     preview = PortfolioPreview(tickers=normalized, table=table, stats=stats, diagnostics=diagnostics)

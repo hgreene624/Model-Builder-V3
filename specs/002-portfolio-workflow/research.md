@@ -1,7 +1,7 @@
 # Research Log — Portfolio Workflow Overhaul
 
 ## Decision: Set interaction latency targets for the Streamlit workflow
-- **Rationale**: Researchers expect near-real-time feedback when pruning universes. Benchmarks from internal Streamlit apps show that vectorized Pandas filtering on ~1k rows completes in <200 ms when cached data frames are reused. Setting a 300 ms budget for filter operations (text search, sector toggles, threshold sliders) ensures the UI feels immediate while leaving headroom for Streamlit rerender overhead.
+- **Rationale**: Researchers expect near-real-time feedback when pruning universes. Benchmarks from internal Streamlit apps show that vectorized Pandas filtering on ~1k rows completes in <200 ms when cached data frames are reused. Setting a 300 ms budget for filter operations (text search, sector toggles, threshold inputs) ensures the UI feels immediate while leaving headroom for Streamlit rerender overhead.
 - **Alternatives considered**:
   - *Looser 500 ms target*: Acceptable but risks sluggish perception when stacking multiple filters; rejected to maintain premium UX.
   - *Aggressive 150 ms target*: Harder to guarantee without heavier optimization or async pipelines; offers limited perceived benefit over 300 ms.

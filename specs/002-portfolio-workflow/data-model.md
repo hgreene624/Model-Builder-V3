@@ -21,7 +21,6 @@
   - `name: str`
   - `sector: str | None`
   - `industry: str | None`
-  - `market_cap: float | None`
   - `coverage_status: CoverageStatus` — enum describing data completeness.
   - `coverage_window: DateWindow | None`
   - `median_price: float | None`
@@ -39,13 +38,12 @@
 - **Fields**
   - `text_query: str`
   - `sectors: set[str]`
-  - `market_cap_limit: float | None`
   - `price_floor: float | None`
   - `volume_floor: float | None`
 - **Relationships**
   - Embedded inside `SymbolRecord` snapshots and `SavedPortfolioArtifact.metadata`.
 - **Validation Rules**
-  - Market cap, price, and volume thresholds must be positive when provided.
+  - Price and volume thresholds must be positive when provided.
   - Sector list must be a subset of sectors present in the active universe.
 
 ### DateWindow
