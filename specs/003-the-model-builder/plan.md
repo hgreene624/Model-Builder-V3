@@ -10,7 +10,7 @@ Deliver a revamped Model Builder workspace that treats strategy profiles as firs
 ## Technical Context
 
 **Language/Version**: Python 3.12 with full typing coverage  
-**Primary Dependencies**: Streamlit 1.39, pandas 2.2, numpy 2.1, Plotly 5.23, Click 8.1 for CLI parity, Pydantic for artifact validation  
+**Primary Dependencies**: Streamlit 1.39, pandas 2.2, numpy 2.1, Plotly 5.23, Click 8.1 for CLI parity  
 **Storage**: JSON strategy profiles and evaluation logs under `storage/strategy_profiles/` and `storage/evaluations/` (schema-versioned), parquet/CSV equity curves under existing layout  
 **Testing**: pytest with unit coverage for repositories/analytics, integration tests for coverage derivation and CLI flows, ruff for lint/format  
 **Target Platform**: Streamlit multi-page app in browser plus CLI commands for macOS/Linux workstations  
@@ -96,3 +96,4 @@ tests/model_builder/
 ## Complexity Tracking
 
 No constitutional violations or extraordinary complexities identified.
+**Polish & Cross-Cutting Concerns Phase**: Runs after all stories to tune UX polish, logging, and documentation updates that span multiple journeys.
