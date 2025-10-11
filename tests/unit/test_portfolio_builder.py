@@ -71,6 +71,11 @@ def test_build_portfolio(tmp_path) -> None:
     assert len(portfolio.tickers) == 2
     assert preview.table.shape[0] == 2
     assert "median_price" in portfolio.liquidity_stats
+    assert portfolio.portfolio_id == "sample"
+    assert portfolio.coverage_summary["start"] == "2024-01-01"
+    assert portfolio.coverage_summary["coverage_gap_count"] == 0
+    assert portfolio.shard_hints == {}
+    assert portfolio.schema_version == "1.1.0"
 
 
 def test_build_portfolio_debug(tmp_path) -> None:

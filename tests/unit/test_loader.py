@@ -101,9 +101,10 @@ def test_loader_diagnostics_tracks_fallback(tmp_path: Path) -> None:
         default_provider="alpaca",
     )
 
-    frame, diagnostics = loader.load_with_diagnostics("AAPL", "2024-01-01", "2024-01-05", interval="1d")
+    frame, diagnostics, error = loader.load_with_diagnostics("AAPL", "2024-01-01", "2024-01-05", interval="1d")
 
     assert not frame.empty
+    assert error is None
     assert diagnostics.cache_hit == "miss"
     assert diagnostics.final_provider == "yahoo"
     assert len(diagnostics.attempts) == 2

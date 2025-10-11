@@ -24,6 +24,8 @@ def test_save_and_load_portfolio(tmp_path: Path) -> None:
         tickers=["AAPL", "MSFT"],
         liquidity_stats={"median_price": 100.0},
         notes=[],
+        coverage_summary={"start": "2020-01-01", "end": "2025-01-01", "coverage_gap_count": 0},
+        shard_hints={"entries": []},
     )
 
     store.save_portfolio(portfolio)
@@ -31,7 +33,13 @@ def test_save_and_load_portfolio(tmp_path: Path) -> None:
 
     assert loaded is not None
     assert loaded.name == "Tech"
+    assert loaded.coverage_summary["start"] == "2020-01-01"
+    assert "coverage_gap_count" in loaded.liquidity_stats
+    assert loaded.schema_version == "1.1.0"
     assert (tmp_path / "portfolios" / "pf-1.json").exists()
+
+    assert store.delete_portfolio("pf-1") is True
+    assert store.load_portfolio("pf-1") is None
 
 
 def test_append_log(tmp_path: Path) -> None:
@@ -59,6 +67,8 @@ def test_list_helpers(tmp_path: Path) -> None:
         tickers=[],
         liquidity_stats={},
         notes=[],
+        coverage_summary={"start": "2020", "end": "2025", "coverage_gap_count": 0},
+        shard_hints={},
     )
     store.save_portfolio(portfolio)
 

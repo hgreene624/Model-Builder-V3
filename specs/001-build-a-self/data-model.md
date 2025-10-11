@@ -16,7 +16,7 @@ All persisted artifacts live under `storage/` with JSON/JSONL documents and parq
 - `filters` (object) — applied criteria (sector, liquidity thresholds, ticker patterns).
 - `coverage_window` (object) — `{start: ISO, end: ISO}`; defaults to 5-year lookback when coverage allows.
 - `tickers` (array of normalized symbols).
-- `liquidity_stats` (object) — median price, median dollar volume, observation count.
+- `liquidity_stats` (object) — median price, median dollar volume, coverage bounds, and missing-data ratios.
 - `notes` (array of strings) — user annotations.
 
 Stored at `storage/portfolios/<portfolio_id>.json`.
