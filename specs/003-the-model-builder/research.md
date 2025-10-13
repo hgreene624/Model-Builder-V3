@@ -26,6 +26,7 @@
 ### 4. Visualization toolkit for best-candidate insights
 - **Decision**: Use Plotly to render the holdout equity curve, rolling-return heatmap, and trade timeline.
 - **Rationale**: Plotly is already bundled, supports synchronized hover interactions across visuals, and handles momentum heatmaps plus timeline sizing without bespoke D3 work.
+- **Implementation notes**: Standardise x-axis presentation for time-series visuals so charts remain legible during long runs. Use abbreviated month + year ticks (`%b %Y`), spacing ticks at two-month intervals by default, and draw faint year dividers to orient the reader. Prefer this formatting for equity curves and apply it to other calendar-based visuals when the date density is similar.
 - **Alternatives considered**:
   - **Altair**: Declarative and concise, but adds another dependency and struggles with large scatter timelines.
   - **Matplotlib static images**: Lightweight yet fails the interactive exploration expectations for holdout analysis.

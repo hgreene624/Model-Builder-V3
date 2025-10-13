@@ -5,22 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3a0f8e7c-00d9-4699-9f00-5cef80cd1d44" name="Changes" comment="Home.py framework set up. Phase 3 done">
-      <change afterPath="$PROJECT_DIR$/src/cli/portfolio_cli.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/portfolio/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/portfolio/seeds.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/portfolio/services.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/integration/test_portfolio_save.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/unit/test_portfolio_builder.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/unit/test_portfolio_cli.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pages/1_Portfolio_Curator.py" beforeDir="false" afterPath="$PROJECT_DIR$/pages/1_Portfolio_Curator.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/specs/001-build-a-self/tasks.md" beforeDir="false" afterPath="$PROJECT_DIR$/specs/001-build-a-self/tasks.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cli/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/cli/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/config/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/config/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/data/loader.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/loader.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/data/providers/alpaca_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/providers/alpaca_client.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/unit/test_loader.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/test_loader.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/unit/test_settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/test_settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pages/2_Model_Builder.py" beforeDir="false" afterPath="$PROJECT_DIR$/pages/2_Model_Builder.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/specs/003-the-model-builder/tasks.md" beforeDir="false" afterPath="$PROJECT_DIR$/specs/003-the-model-builder/tasks.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/optimizer/evolutionary.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/optimizer/evolutionary.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/optimizer/workflow.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/optimizer/workflow.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/storage/layout.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/storage/layout.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/conftest.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/conftest.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -35,41 +27,41 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "hgreene624"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;hgreene624&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/hgreene624/Model-Builder-V3.git",
-    "accountId": "1e92545f-1488-456d-bba4-9ce5a4ab4895"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/hgreene624/Model-Builder-V3.git&quot;,
+    &quot;accountId&quot;: &quot;1e92545f-1488-456d-bba4-9ce5a4ab4895&quot;
   }
-}]]></component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 6
-}]]></component>
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6
+}</component>
   <component name="ProjectId" id="33skmCrIBe587mQQwJsbAXTcFSF" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "001-build-a-self",
-    "last_opened_file_path": "/Users/holdengreene/PycharmProjects/Model Builder V3",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;003-the-model-builder&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/holdengreene/PycharmProjects/Model Builder V3&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
@@ -91,6 +83,8 @@
       <option name="presentableId" value="Default" />
       <updated>1760113323568</updated>
       <workItem from="1760113324627" duration="17118000" />
+      <workItem from="1760359549779" duration="2314000" />
+      <workItem from="1760361881445" duration="4666000" />
     </task>
     <task id="LOCAL-00001" summary="Project Created">
       <option name="closed" value="true" />
@@ -177,6 +171,17 @@
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Project Created" />

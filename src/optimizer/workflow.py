@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
@@ -21,6 +21,9 @@ from src.optimizer.evolutionary import ConstraintGate, ObjectiveWeights, Evoluti
 from src.optimizer.telemetry import TelemetryPublisher
 from src.optimizer.training_logger import TrainingLogger
 from src.storage.layout import StorageLayout
+
+from model_builder.optimization import EvaluationAppender, TelemetryLogWriter
+from model_builder.optimization.coverage import CoveragePlan, derive_plan
 
 
 @dataclass(frozen=True)
@@ -44,9 +47,11 @@ class OptimizationResult:
     synthetic: bool
     run_id: str
     log_path: Path
+    evaluation_log_path: Path
     parameter_path: Path
     best_config: ATRBreakoutConfig
     best_risk: RiskSettings
+    coverage_plan: CoveragePlan
 
 
 def build_loader(settings: AppSettings) -> MarketDataLoader | None:
@@ -86,6 +91,22 @@ def generate_synthetic_frames(symbols: Iterable[str], periods: int = 365) -> Dic
             index=index,
         )
     return frames
+
+
+def _filter_frame_by_dates(frame: pd.DataFrame, *, start: date, end: date) -> pd.DataFrame:
+    """Restrict a bars frame to the inclusive [start, end] date range."""
+
+    if frame.empty:
+        return frame
+
+    index = frame.index
+    try:
+        dates = index.date  # pandas DatetimeIndex
+    except AttributeError:
+        return frame
+
+    mask = (dates >= start) & (dates <= end)
+    return frame.loc[mask]
 
 
 def resolve_coverage_window(portfolio: Portfolio) -> Tuple[str, str]:
@@ -313,9 +334,19 @@ def run_optimization(
     session: str,
     run_id: Optional[str] = None,
     use_synthetic: bool = False,
+    train_percentage: float | None = None,
+    warmup_days: Optional[int] = None,
 ) -> OptimizationResult:
     if not selected_symbols:
         raise ValueError("Selected symbol list is empty; provide at least one ticker.")
+
+    train_fraction = float(train_percentage) if train_percentage is not None else 0.7
+    if not (0 < train_fraction < 1):
+        raise ValueError("train_percentage must be between 0 and 1 (exclusive).")
+
+    warmup_allocation = int(warmup_days) if warmup_days is not None else base_config.warmup
+    if warmup_allocation < 1:
+        raise ValueError("warmup_days must be ≥ 1.")
 
     layout = StorageLayout(settings.data_dir)
     loader = None if use_synthetic else build_loader(settings)
@@ -327,13 +358,45 @@ def run_optimization(
         selected_symbols,
         start,
         end,
-        warmup_bars=base_config.warmup,
+        warmup_bars=max(base_config.warmup, warmup_allocation),
         use_synthetic=use_synthetic,
     )
 
     price_matrix = build_price_matrix(bars_by_symbol)
     if price_matrix.empty:
         raise ValueError("Unable to assemble price data for the selected symbols.")
+
+    coverage_dates = [timestamp.date() for timestamp in price_matrix.index]
+    coverage_plan = derive_plan(
+        portfolio_id=portfolio.portfolio_id,
+        coverage_dates=coverage_dates,
+        train_percentage=train_fraction,
+        warmup_days=warmup_allocation,
+    )
+
+    warmup_start = coverage_plan.warmup.slice.start
+    train_end = coverage_plan.train.end
+
+    filtered_bars: Dict[str, pd.DataFrame] = {}
+    for symbol, frame in bars_by_symbol.items():
+        sliced = _filter_frame_by_dates(frame, start=warmup_start, end=train_end)
+        if sliced.empty:
+            raise ValueError(
+                f"No price data available for symbol '{symbol}' within training window "
+                f"{warmup_start} to {train_end}."
+            )
+        filtered_bars[symbol] = sliced
+    bars_by_symbol = filtered_bars
+
+    price_matrix = _filter_frame_by_dates(price_matrix, start=warmup_start, end=train_end)
+    if price_matrix.empty:
+        raise ValueError("Training price data unavailable after applying coverage plan.")
+
+    if coverage_plan.warmup.deficit_days > 0:
+        issues.append(
+            f"Warmup extended into holdout by {coverage_plan.warmup.deficit_days} day(s) "
+            "to satisfy warmup requirement."
+        )
 
     context = OptimizationContext(
         bars_by_symbol=bars_by_symbol,
@@ -356,6 +419,7 @@ def run_optimization(
     mutate_fn = build_mutate_fn(bounds, int_fields)
 
     actual_run_id = run_id or uuid.uuid4().hex
+
     telemetry_events: List[dict] = []
     publisher = TelemetryPublisher(
         run_id=actual_run_id,
@@ -363,6 +427,28 @@ def run_optimization(
         session=session,
     )
     publisher.register(telemetry_events.append)
+
+    telemetry_writer = TelemetryLogWriter(run_id=actual_run_id, layout=layout, session=session)
+    evaluation_appender = EvaluationAppender(writer=telemetry_writer)
+
+    def _record_candidate(event: Dict[str, object]) -> None:
+        metadata = {
+            "generation": event.get("generation"),
+            "rank": event.get("rank"),
+            "raw_score": event.get("raw_score"),
+            "penalty": event.get("penalty"),
+            "stats": event.get("stats"),
+        }
+        metadata = {key: value for key, value in metadata.items() if value is not None}
+        envelope = evaluation_appender.append(
+            candidate_id=str(event["candidate_id"]),
+            score=float(event["score"]),
+            metrics=event.get("metrics", {}),
+            parameter_payload=event.get("parameters", {}),
+            metadata=metadata,
+        )
+        if envelope is not None:
+            telemetry_events.append(envelope)
 
     optimizer = EvolutionaryOptimizer(
         objective_weights=objective_weights,
@@ -373,6 +459,7 @@ def run_optimization(
         generations=generations,
         max_workers=max_workers,
         mutate_fn=mutate_fn,
+        candidate_event_sink=_record_candidate,
     )
 
     parameter_set = optimizer.run(
@@ -396,7 +483,9 @@ def run_optimization(
         synthetic=synthetic_used,
         run_id=actual_run_id,
         log_path=layout.run_log_path(actual_run_id),
+        evaluation_log_path=telemetry_writer.log_path,
         parameter_path=layout.parameter_set_path(parameter_set.parameter_set_id),
         best_config=best_config,
         best_risk=best_risk,
+        coverage_plan=coverage_plan,
     )

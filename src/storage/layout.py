@@ -63,3 +63,21 @@ class StorageLayout:
         safe_symbol = symbol.upper()
         filename = f"{start}_{end}.parquet"
         return self._ensure_parent(self.root / "ohlcv" / safe_symbol / interval / filename)
+
+    # --- Strategy profiles & evaluation runs -------------------------------------------------
+
+    def strategy_profiles_directory(self) -> Path:
+        path = self.root / "strategy_profiles"
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+
+    def strategy_profile_path(self, profile_id: str) -> Path:
+        return self._ensure_parent(self.strategy_profiles_directory() / f"{profile_id}.json")
+
+    def evaluations_directory(self) -> Path:
+        path = self.root / "evaluations"
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+
+    def evaluation_log_path(self, run_id: str) -> Path:
+        return self._ensure_parent(self.evaluations_directory() / f"{run_id}.jsonl")

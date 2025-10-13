@@ -20,6 +20,27 @@ addopts = "-ra"
 testpaths = [
     "tests",
 ]
+pythonpath = [
+    "src",
+]
 
 [tool.streamlit]
 server.headless = true
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = [
+    "cli",
+    "config",
+    "data",
+    "engine",
+    "home",
+    "model_builder",
+    "models",
+    "optimizer",
+    "portfolio",
+    "storage",
+]

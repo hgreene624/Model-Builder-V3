@@ -1,20 +1,29 @@
 from __future__ import annotations
 
-import json
 import math
+import sys
+from pathlib import Path
 from typing import Dict, List, Sequence, Tuple
 
 import pandas as pd
+import plotly.express as px
 import streamlit as st
 
-from src.config.settings import AppSettings
-from src.engine.atr_breakout import ATRBreakoutConfig, RiskSettings
-from src.engine.backtest import CostModel
-from src.models.contracts import Portfolio
-from src.optimizer.evolutionary import ConstraintGate, ObjectiveWeights
-from src.optimizer.workflow import OptimizationResult, resolve_coverage_window, run_optimization
-from src.storage.artifacts import ArtifactStore
-from src.storage.layout import StorageLayout
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+SRC_PATH = PROJECT_ROOT / "src"
+if str(SRC_PATH) not in sys.path:
+    sys.path.insert(0, str(SRC_PATH))
+
+from model_builder.optimization import EVENT_TYPE_CANDIDATE_EVALUATION  # noqa: E402
+from model_builder.ui.components.live_evaluations import get_live_evaluations_state  # noqa: E402
+from src.config.settings import AppSettings  # noqa: E402
+from src.engine.atr_breakout import ATRBreakoutConfig, RiskSettings  # noqa: E402
+from src.engine.backtest import CostModel  # noqa: E402
+from src.models.contracts import Portfolio  # noqa: E402
+from src.optimizer.evolutionary import ConstraintGate, ObjectiveWeights  # noqa: E402
+from src.optimizer.workflow import OptimizationResult, resolve_coverage_window, run_optimization  # noqa: E402
+from src.storage.artifacts import ArtifactStore  # noqa: E402
+from src.storage.layout import StorageLayout  # noqa: E402
 
 MAX_SYMBOLS = 10
 SESSION_RESULTS_KEY = "model_builder_last_result"
@@ -36,32 +45,91 @@ def _render_portfolio_summary(portfolio: Portfolio, selected_symbols: Sequence[s
     )
 
 
-def _display_telemetry(events: List[dict]) -> None:
-    st.subheader("Telemetry")
-    if not events:
-        st.caption("No telemetry events captured for this run.")
-        return
-    rows = []
-    for event in events:
-        payload_preview = json.dumps(event["payload"], separators=(",", ":"))
-        rows.append(
-            {
-                "timestamp": event["timestamp"],
-                "event_type": event["event_type"],
-                "best_fitness": event["payload"].get("best_fitness"),
-                "population": event["payload"].get("population_size"),
-                "payload": payload_preview,
-            }
-        )
-    st.dataframe(pd.DataFrame(rows))
-
-
 def _render_equity_curve(equity: pd.DataFrame) -> None:
     st.subheader("Equity Curve")
     if equity.empty:
         st.caption("Backtest produced no equity curve for the best genome.")
         return
-    st.line_chart(equity.set_index("timestamp")["equity"])
+
+    frame = equity.copy()
+    if "timestamp" in frame.columns:
+        frame["timestamp"] = pd.to_datetime(frame["timestamp"])
+        x_field = "timestamp"
+    else:
+        frame = frame.reset_index().rename(columns={"index": "timestamp"})
+        frame["timestamp"] = pd.to_datetime(frame["timestamp"])
+        x_field = "timestamp"
+
+    if "equity" not in frame.columns:
+        st.line_chart(frame.set_index(x_field))
+        return
+
+    fig = px.line(frame, x=x_field, y="equity")
+    fig.update_traces(mode="lines", hovertemplate="%{x|%Y-%m-%d}<br>Equity=%{y:.2f}<extra></extra>")
+    fig.update_xaxes(
+        tickformat="%b %Y",
+        dtick="M2",
+        ticklabelmode="period",
+        showline=True,
+        linewidth=1,
+        linecolor="rgba(0,0,0,0.4)",
+        mirror=True,
+    )
+    years = sorted(frame[x_field].dt.year.unique())
+    for year in years[1:]:
+        boundary = pd.Timestamp(year=year, month=1, day=1)
+        fig.add_vline(
+            x=boundary,
+            line_dash="dash",
+            line_color="rgba(0,0,0,0.25)",
+            line_width=1,
+        )
+    fig.update_layout(margin=dict(l=0, r=0, t=10, b=0))
+    st.plotly_chart(fig, use_container_width=True)
+
+
+def _render_live_evaluations(run_id: str, events: List[dict]) -> None:
+    st.subheader("Live Holdout Evaluations")
+    if not run_id:
+        st.caption("Run identifier missing; unable to render candidate stream.")
+        return
+
+    state = get_live_evaluations_state(st.session_state)
+    ingested = 0
+
+    for envelope in events:
+        if not isinstance(envelope, dict):
+            continue
+        if envelope.get("event_type") != EVENT_TYPE_CANDIDATE_EVALUATION:
+            continue
+        payload = envelope.get("payload")
+        if not isinstance(payload, dict):
+            continue
+        try:
+            state.ingest(run_id, payload)
+        except (TypeError, ValueError):
+            continue
+        ingested += 1
+
+    rows = state.rows
+    if not rows:
+        st.caption("No candidate evaluations captured yet.")
+        return
+
+    df = pd.DataFrame(list(rows))
+    df_display = df[["candidate_id", "score", "score_delta", "timestamp"]].copy()
+    df_display["score"] = df_display["score"].map(lambda value: round(value, 6))
+    df_display["score_delta"] = df_display["score_delta"].map(lambda value: round(value, 6))
+    st.dataframe(df_display, use_container_width=True)
+
+    best_row = max(rows, key=lambda row: row["score"])
+    st.caption(
+        f"Best candidate: `{best_row['candidate_id']}` · "
+        f"score {best_row['score']:.4f} (Δ {best_row['score_delta']:.4f})"
+    )
+
+    if ingested:
+        st.caption(f"{ingested} new candidate event{'s' if ingested != 1 else ''} processed.")
 
 
 def _format_bounds(
@@ -89,6 +157,7 @@ def _summarize_result(result: OptimizationResult) -> Dict[str, object]:
         "metrics": fitness,
         "constraints": result.parameter_set.constraints,
         "log_path": str(result.log_path),
+        "evaluation_log_path": str(result.evaluation_log_path),
         "parameter_path": str(result.parameter_path),
         "synthetic_data": result.synthetic,
         "issues": result.issues,
@@ -389,6 +458,7 @@ def run_page() -> None:
             )
             st.write(f"Parameter Set ID: `{parameter_set.parameter_set_id}`")
             st.caption(f"Telemetry log saved at `{result.log_path}`")
+            st.caption(f"Candidate replay log saved at `{result.evaluation_log_path}`")
 
         with metrics_col:
             st.subheader("Performance Snapshot")
@@ -396,7 +466,7 @@ def run_page() -> None:
             st.write({k: round(v, 4) for k, v in result.stats.items()})
 
         _render_equity_curve(result.equity_curve)
-        _display_telemetry(result.telemetry)
+        _render_live_evaluations(result.run_id, result.telemetry)
 
         st.success("Optimization complete. Best parameter set saved to storage.")
         st.session_state[SESSION_RESULTS_KEY] = _summarize_result(result)

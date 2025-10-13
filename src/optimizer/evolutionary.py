@@ -96,6 +96,7 @@ class EvolutionaryOptimizer:
         generations: int,
         max_workers: int = 1,
         mutate_fn: MutateFn | None = None,
+        candidate_event_sink: Callable[[dict], None] | None = None,
     ) -> None:
         if population_size <= 0:
             raise ValueError("population_size must be positive")
@@ -112,6 +113,7 @@ class EvolutionaryOptimizer:
         self.generations = generations
         self.max_workers = max_workers
         self.mutate_fn = mutate_fn
+        self._candidate_event_sink = candidate_event_sink
 
     def run(
         self,
@@ -143,7 +145,12 @@ class EvolutionaryOptimizer:
         best_record: CandidateScore | None = None
 
         for generation in range(1, self.generations + 1):
-            records = self._evaluate_population(population, evaluator)
+            records = self._evaluate_population(
+                run_id=run_id,
+                generation=generation,
+                population=population,
+                evaluator=evaluator,
+            )
             records.sort(key=lambda item: item.adjusted_score, reverse=True)
 
             generation_best = records[0]
@@ -194,20 +201,70 @@ class EvolutionaryOptimizer:
 
         return parameter_set
 
-    def _evaluate_population(self, population: Sequence[Dict[str, float]], evaluator: EvaluationFn) -> List[CandidateScore]:
+    def _evaluate_population(
+        self,
+        *,
+        run_id: str,
+        generation: int,
+        population: Sequence[Dict[str, float]],
+        evaluator: EvaluationFn,
+    ) -> List[CandidateScore]:
         records: List[CandidateScore] = []
 
         if self.max_workers > 1:
             with ProcessPoolExecutor(max_workers=self.max_workers) as executor:
-                for genome, outcome in zip(population, executor.map(evaluator, population), strict=False):
-                    records.append(self._build_record(dict(genome), outcome))
+                for index, (genome, outcome) in enumerate(
+                    zip(population, executor.map(evaluator, population), strict=False), start=1
+                ):
+                    record = self._build_record(dict(genome), outcome)
+                    records.append(record)
+                    self._emit_candidate_event(
+                        run_id=run_id,
+                        generation=generation,
+                        index=index,
+                        record=record,
+                    )
             return records
 
     # In sequential mode --------------------------------------------------
-        for genome in population:
+        for index, genome in enumerate(population, start=1):
             outcome = evaluator(genome)
-            records.append(self._build_record(dict(genome), outcome))
+            record = self._build_record(dict(genome), outcome)
+            records.append(record)
+            self._emit_candidate_event(
+                run_id=run_id,
+                generation=generation,
+                index=index,
+                record=record,
+            )
         return records
+
+    def _emit_candidate_event(
+        self,
+        *,
+        run_id: str,
+        generation: int,
+        index: int,
+        record: CandidateScore,
+    ) -> None:
+        if self._candidate_event_sink is None:
+            return
+        candidate_id = f"{run_id}-g{generation:03d}-c{index:03d}"
+        payload = {
+            "candidate_id": candidate_id,
+            "score": record.adjusted_score,
+            "raw_score": record.score,
+            "metrics": record.metrics,
+            "parameters": record.parameters,
+            "stats": record.stats,
+            "penalty": record.penalty,
+            "generation": generation,
+            "rank": index,
+        }
+        try:
+            self._candidate_event_sink(payload)
+        except Exception:  # pragma: no cover - defensive
+            pass
 
     def _build_record(self, genome: Dict[str, float], outcome: Dict[str, Dict[str, float]]) -> CandidateScore:
         metrics = dict(outcome.get("metrics") or {})

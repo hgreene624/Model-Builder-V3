@@ -3,7 +3,7 @@
 **Input**: Design documents from `/specs/003-the-model-builder/`
 **Prerequisites**: plan.md, spec.md, research.md, contracts/
 
-**Tests**: The spec and constitution require automated coverage; each user story includes targeted test tasks.
+**Tests**: The spec and constitution require automated coverage; we retain only a few critical tests in this plan.
 
 **Organization**: Tasks are grouped by user story to keep increments independently deliverable.
 
@@ -18,11 +18,10 @@
 
 **Purpose**: Establish package scaffolding so subsequent work lands under `model_builder`.
 
-- [ ] T001 [Setup] Create package skeleton per plan: add `src/model_builder/{profiles,optimization,analytics,ui,cli}/__init__.py` and matching `tests/model_builder/.../.gitkeep`.
-- [ ] T002 [P] [Setup] Update `pyproject.toml` packaging section so `model_builder` package is included in distribution.
-- [ ] T003 [P] [Setup] Configure `src/model_builder/__init__.py` to expose top-level namespaces (`profiles`, `optimization`, `analytics`, `ui`, `cli`) for Streamlit/CLI imports.
+- [X] T001 [Setup] Create package skeleton per plan: add `src/model_builder/{profiles,optimization,analytics,ui,cli}/__init__.py` and matching `tests/model_builder/.../.gitkeep`.
+- [X] T002 [P] [Setup] Update `pyproject.toml` packaging section so `model_builder` package is included in distribution.
+- [X] T003 [P] [Setup] Configure `src/model_builder/__init__.py` to expose top-level namespaces (`profiles`, `optimization`, `analytics`, `ui`, `cli`) for Streamlit/CLI imports.
 
----
 
 ## Phase 2: Foundational (Blocking Prerequisites)
 
@@ -30,11 +29,11 @@
 
 **⚠️ CRITICAL**: Complete before starting user story implementation.
 
-- [ ] T004 [Foundation] Define shared constants in `src/model_builder/profiles/constants.py` (e.g., `PROFILE_SCHEMA_VERSION`, default warmup days).
-- [ ] T005 [Foundation] Extend `src/storage/layout.py` to add helpers for `strategy_profiles/` and `evaluations/` directories plus ensure they are created.
-- [ ] T006 [P] [Foundation] Implement `src/model_builder/profiles/models.py` dataclasses (StrategyProfile, CoverageWindow) with validation helpers used across stories.
-- [ ] T007 [P] [Foundation] Implement `src/model_builder/optimization/coverage.py` functions to derive train/holdout/warmup windows (enforcing ≥1 holdout day, extending warmup when necessary).
-- [ ] T008 [Foundation] Create telemetry log writer base in `src/model_builder/optimization/telemetry.py` that emits JSONL envelopes and returns log paths (supports FR-016).
+- [X] T004 [Foundation] Define shared constants in `src/model_builder/profiles/constants.py` (e.g., `PROFILE_SCHEMA_VERSION`, default warmup days).
+- [X] T005 [Foundation] Extend `src/storage/layout.py` to add helpers for `strategy_profiles/` and `evaluations/` directories plus ensure they are created.
+- [X] T006 [P] [Foundation] Implement `src/model_builder/profiles/models.py` dataclasses (StrategyProfile, CoverageWindow) with validation helpers used across stories.
+- [X] T007 [P] [Foundation] Implement `src/model_builder/optimization/coverage.py` functions to derive train/holdout/warmup windows (enforcing ≥1 holdout day, extending warmup when necessary).
+- [X] T008 [Foundation] Create telemetry log writer base in `src/model_builder/optimization/telemetry.py` that emits JSONL envelopes and returns log paths (supports FR-016).
 
 **Checkpoint**: Foundation ready — user stories can now proceed.
 
@@ -46,20 +45,19 @@
 
 **Independent Test**: Load, edit, and save a profile, then start an optimization run while verifying train/test dates and warmup placement follow the settings.
 
-### Tests for User Story 1
+### Key Test for User Story 1
 
-- [ ] T009 [P] [US1] Add repository unit tests for load/save round trips in `tests/model_builder/profiles/test_repository.py`.
-- [ ] T010 [P] [US1] Add coverage derivation integration test in `tests/model_builder/optimization/test_coverage_flow.py` (train/holdout split, warmup extension).
+- [X] T010 [P] [US1] Add coverage derivation integration test in `tests/model_builder/optimization/test_coverage_flow.py` (train/holdout split, warmup extension).
 
 ### Implementation for User Story 1
 
-- [ ] T011 [US1] Implement JSON repository in `src/model_builder/profiles/repository.py` (list/load/save/delete under `storage/strategy_profiles/` with schema version check).
-- [ ] T012 [US1] Add service layer in `src/model_builder/profiles/service.py` to orchestrate repository operations and expose CLI-friendly DTOs.
-- [ ] T013 [US1] Wire Click commands in `src/model_builder/cli/model_builder.py` for listing, saving, deleting profiles (align with contracts `/strategy-profiles` endpoints).
-- [ ] T014 [US1] Update optimizer workflow (`src/optimizer/workflow.py`) to consume `model_builder.optimization.coverage` outputs and restrict optimization to training window.
-- [ ] T015 [US1] Update Streamlit entry page `pages/2_Model_Builder.py` to delegate to `model_builder.ui.pages.model_builder_page.run_page`, sourcing profiles via new service and honoring warmup logic.
-- [ ] T016 [US1] Implement UI component `src/model_builder/ui/components/profile_editor.py` handling create/save/delete with confirmation, reflecting open-access assumption.
-- [ ] T017 [US1] Ensure CLI command results persist replay metadata (run IDs, parameter paths) to seed later stories (write to storage/evaluations via telemetry base).
+- [X] T011 [US1] Implement JSON repository in `src/model_builder/profiles/repository.py` (list/load/save/delete under `storage/strategy_profiles/` with schema version check).
+- [X] T012 [US1] Add service layer in `src/model_builder/profiles/service.py` to orchestrate repository operations and expose CLI-friendly DTOs.
+- [X] T013 [US1] Wire Click commands in `src/model_builder/cli/model_builder.py` for listing, saving, deleting profiles (align with contracts `/strategy-profiles` endpoints).
+- [X] T014 [US1] Update optimizer workflow (`src/optimizer/workflow.py`) to consume `model_builder.optimization.coverage` outputs and restrict optimization to training window.
+- [X] T015 [US1] Update Streamlit entry page `pages/2_Model_Builder.py` to delegate to `model_builder.ui.pages.model_builder_page.run_page`, sourcing profiles via new service and honoring warmup logic.
+- [X] T016 [US1] Implement UI component `src/model_builder/ui/components/profile_editor.py` handling create/save/delete with confirmation, reflecting open-access assumption.
+- [X] T017 [US1] Ensure CLI command results persist replay metadata (run IDs, parameter paths) to seed later stories (write to storage/evaluations via telemetry base).
 
 **Checkpoint**: MVP ready — User Story 1 independently testable.
 
@@ -71,16 +69,15 @@
 
 **Independent Test**: Trigger an evolutionary run emitting candidate scores and confirm the table appends each row (with score, delta, timestamp, payload) while retaining prior rows from the same run only.
 
-### Tests for User Story 2
+### Key Test for User Story 2
 
-- [ ] T018 [P] [US2] Add telemetry log replay test in `tests/model_builder/optimization/test_telemetry_log.py` to ensure candidate events append and reset per run.
-- [ ] T019 [P] [US2] Add Streamlit component test using `streamlit.testing` (or mock) in `tests/model_builder/ui/test_live_evaluations_component.py` to assert reset-on-run behavior and column schema.
+- [X] T019 [P] [US2] Add Streamlit component test using `streamlit.testing` (or mock) in `tests/model_builder/ui/test_live_evaluations_component.py` to assert reset-on-run behavior and column schema.
 
 ### Implementation for User Story 2
 
-- [ ] T020 [US2] Implement evaluation appender in `src/model_builder/optimization/runner.py` that streams candidate events to telemetry writer and returns session payloads.
-- [ ] T021 [US2] Add session-scoped state manager in `src/model_builder/ui/components/live_evaluations.py` that resets table on new run ID and appends candidate rows.
-- [ ] T022 [US2] Update Streamlit page `model_builder_page.py` to subscribe to telemetry events, render the live evaluations component, and surface score deltas.
+- [X] T020 [US2] Implement evaluation appender in `src/model_builder/optimization/runner.py` that streams candidate events to telemetry writer and returns session payloads.
+- [X] T021 [US2] Add session-scoped state manager in `src/model_builder/ui/components/live_evaluations.py` that resets table on new run ID and appends candidate rows.
+- [X] T022 [US2] Update Streamlit page `model_builder_page.py` to subscribe to telemetry events, render the live evaluations component, and surface score deltas.
 - [ ] T023 [US2] Extend CLI command `evaluations live-tail` in `src/model_builder/cli/model_builder.py` to stream candidate events using the same telemetry logs.
 - [ ] T024 [US2] Update OpenAPI contract `specs/003-the-model-builder/contracts/model-builder.openapi.yaml` with any field changes introduced by telemetry payloads (if needed).
 
@@ -94,10 +91,9 @@
 
 **Independent Test**: Promote a candidate to top score and confirm the callout, charts, and timeline refresh immediately and remain after reruns.
 
-### Tests for User Story 3
+### Testing Approach for User Story 3
 
-- [ ] T025 [P] [US3] Add unit tests for analytics builders (`heatmap_builder`, `trade_timeline`) in `tests/model_builder/analytics/test_visual_builders.py`.
-- [ ] T026 [P] [US3] Add UI integration test in `tests/model_builder/ui/test_best_candidate_module.py` asserting visuals persist across reruns within session state.
+Manual verification only; no new automated tests planned in this phase.
 
 ### Implementation for User Story 3
 
@@ -125,7 +121,7 @@
 - **Setup → Foundational → User Stories → Polish** in strict sequence.
 - After Phase 2, User Stories 1–3 may proceed in parallel (respecting priority for MVP delivery).
 - Within each story:
-  - Tests (T009/T010, T018/T019, T025/T026) precede implementations but can run concurrently where marked [P].
+  - Remaining tests (T010, T019) precede implementations but can run concurrently where marked [P].
   - Services must exist before UI or CLI wiring.
   - Telemetry/log schema updates (T017, T023, T031) must remain consistent.
 
@@ -141,7 +137,7 @@ US2 and US3 conceptually depend on telemetry/log artifacts introduced in earlier
 
 - T002 & T003 (setup) can run alongside each other after T001.
 - T006 & T007 (foundation) can proceed in parallel after T004/T005.
-- Per-story test tasks (T009/T010, T018/T019, T025/T026) can execute concurrently.
+- Remaining test tasks (T010, T019) can execute concurrently.
 - Within US1: T011/T012 ([P] across different modules) may proceed in parallel once models are ready.
 - Distinct stories can be split across developers after foundation, provided telemetry schema remains synchronized.
 
