@@ -16,7 +16,7 @@ from src.data.cache import MarketDataCache
 from src.data.loader import MarketDataLoader
 from src.engine.atr_breakout import ATRBreakoutConfig, RiskSettings, atr_breakout_signals
 from src.engine.backtest import CostModel, run_backtest
-from src.models.contracts import ParameterSet, Portfolio
+from src.models.contracts import ParameterSet, Portfolio, TradeRecord
 from src.optimizer.evolutionary import ConstraintGate, ObjectiveWeights, EvolutionaryOptimizer
 from src.optimizer.telemetry import TelemetryPublisher
 from src.optimizer.training_logger import TrainingLogger
@@ -40,9 +40,12 @@ class OptimizationContext:
 class OptimizationResult:
     parameter_set: ParameterSet
     telemetry: List[dict]
+    candidate_history: List[dict]
+    best_candidate_id: str | None
     metrics: Dict[str, float]
     stats: Dict[str, float]
     equity_curve: pd.DataFrame
+    trades: List[TradeRecord]
     issues: List[str]
     synthetic: bool
     run_id: str
@@ -501,6 +504,9 @@ def run_optimization(
         seed=seed,
     )
 
+    candidate_history = evaluation_appender.snapshot()
+    best_candidate_id = evaluation_appender.best_candidate_id
+
     best_config, best_risk, _, metrics, stats = backtest_best(parameter_set.parameters, context)
 
     full_backtest = _evaluate_config(
@@ -516,9 +522,12 @@ def run_optimization(
     return OptimizationResult(
         parameter_set=parameter_set,
         telemetry=telemetry_events,
+        candidate_history=candidate_history,
+        best_candidate_id=best_candidate_id,
         metrics=metrics,
         stats=stats,
         equity_curve=equity_curve,
+        trades=list(full_backtest.trades),
         issues=issues,
         synthetic=synthetic_used,
         run_id=actual_run_id,

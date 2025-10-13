@@ -79,7 +79,7 @@
 - [X] T021 [US2] Add session-scoped state manager in `src/model_builder/ui/components/live_evaluations.py` that resets table on new run ID and appends candidate rows.
 - [X] T022 [US2] Update Streamlit page `model_builder_page.py` to subscribe to telemetry events, render the live evaluations component, and surface score deltas.
 - [ ] T023 [US2] Extend CLI command `evaluations live-tail` in `src/model_builder/cli/model_builder.py` to stream candidate events using the same telemetry logs.
-- [ ] T024 [US2] Update OpenAPI contract `specs/003-the-model-builder/contracts/model-builder.openapi.yaml` with any field changes introduced by telemetry payloads (if needed).
+- [X] T024 [US2] Update OpenAPI contract `specs/003-the-model-builder/contracts/model-builder.openapi.yaml` with any field changes introduced by telemetry payloads (if needed).
 
 **Checkpoint**: User Stories 1 and 2 work independently.
 
@@ -98,8 +98,8 @@ Manual verification only; no new automated tests planned in this phase.
 ### Implementation for User Story 3
 
 - [ ] T027 [US3] Implement momentum heatmap builder in `src/model_builder/analytics/heatmap_builder.py` supporting 5/10/20/60-day intervals with narrative text.
-- [ ] T028 [US3] Implement trade timeline transformer in `src/model_builder/analytics/trade_timeline.py` sizing bubbles by notional and color-coding P&L.
-- [ ] T029 [US3] Implement best candidate presenter in `src/model_builder/ui/components/candidate_summary.py` combining callout, equity curve chart, heatmap, and timeline.
+- [X] T028 [US3] Implement trade timeline transformer in `src/model_builder/analytics/trade_timeline.py` sizing bubbles by notional and color-coding P&L.
+- [X] T029 [US3] Implement best candidate presenter in `src/model_builder/ui/components/candidate_summary.py` combining callout, equity curve chart, heatmap, and timeline.
 - [ ] T030 [US3] Update `model_builder_page.py` to pin best candidate visuals in `st.session_state` and restore them after reruns.
 - [ ] T031 [US3] Extend telemetry/log schema in `model_builder/optimization/telemetry.py` to include references to equity curve and visual artifacts for replay (align with FR-016).
 

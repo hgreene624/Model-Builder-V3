@@ -1,12 +1,18 @@
+from __future__ import annotations
+
 from pathlib import Path
 import sys
 
-import pandas as pd
+from model_builder.ui.components.candidate_summary import (
+    build_best_candidate_view,
+    load_best_candidate,
+    store_best_candidate,
+)
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-src_path = str(PROJECT_ROOT / "src")
-if src_path not in sys.path:
-    sys.path.insert(0, src_path)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+src_path = PROJECT_ROOT / "src"
+if str(src_path) not in sys.path:
+    sys.path.insert(0, str(src_path))
 
 from src.config.settings import AppSettings  # noqa: E402
 from src.engine.atr_breakout import ATRBreakoutConfig, RiskSettings  # noqa: E402
@@ -31,7 +37,7 @@ def _build_synthetic_portfolio() -> Portfolio:
     )
 
 
-def test_run_optimization_produces_holdout_equity() -> None:
+def test_best_candidate_view_roundtrip() -> None:
     portfolio = _build_synthetic_portfolio()
     settings = AppSettings.from_env()
     result = run_optimization(
@@ -61,18 +67,18 @@ def test_run_optimization_produces_holdout_equity() -> None:
         warmup_days=10,
     )
 
-    curve = result.equity_curve
-    assert not curve.empty
+    view = build_best_candidate_view(result)
+    assert view is not None
+    assert view.run_id == result.run_id
+    assert isinstance(view.training_equity, list)
+    assert isinstance(view.holdout_equity, list)
+    assert "windows" in view.heatmap and "matrix" in view.heatmap
+    assert len(view.heatmap["windows"]) > 0
+    assert "points" in view.timeline
 
-    timestamps = pd.to_datetime(curve["timestamp"])
-    holdout_start = pd.Timestamp(result.coverage_plan.holdout.start)
-    if timestamps.dt.tz is not None:
-        holdout_start = holdout_start.tz_localize(timestamps.dt.tz)
-
-    holdout_points = int((timestamps >= holdout_start).sum())
-    assert holdout_points > 0
-    assert holdout_points <= len(curve)
-
-    assert isinstance(result.candidate_history, list)
-    assert result.best_candidate_id is not None
-    assert isinstance(result.trades, list)
+    session_state: dict[str, object] = {}
+    store_best_candidate(session_state, view)
+    restored = load_best_candidate(session_state)
+    assert restored is not None
+    assert restored.run_id == view.run_id
+    assert restored.candidate_id == view.candidate_id

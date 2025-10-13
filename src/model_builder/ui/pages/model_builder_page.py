@@ -9,6 +9,12 @@ import streamlit as st
 
 from model_builder.optimization.coverage import CoveragePlan
 from model_builder.profiles import ProfilesService, StrategyProfileRepository
+from model_builder.ui.components import (
+    build_best_candidate_view,
+    load_best_candidate,
+    render_best_candidate,
+    store_best_candidate,
+)
 from model_builder.ui.components.profile_editor import ProfileEditorResult, render_profile_editor
 from src.config.settings import AppSettings
 from src.engine.atr_breakout import ATRBreakoutConfig, RiskSettings
@@ -370,6 +376,11 @@ def _display_result(result: OptimizationResult) -> None:
 
     _render_equity_curve(result)
 
+    best_candidate = build_best_candidate_view(result)
+    if best_candidate is not None:
+        store_best_candidate(st.session_state, best_candidate)
+        render_best_candidate(best_candidate)
+
 
 def _build_objective(parameters: Dict[str, Any]) -> ObjectiveWeights:
     objective = parameters.get("objective_weights", {})
@@ -511,6 +522,9 @@ def run_page() -> None:
     elif SESSION_RESULTS_KEY in st.session_state:
         st.subheader("Most Recent Run")
         st.json(st.session_state[SESSION_RESULTS_KEY])
+        stored_view = load_best_candidate(st.session_state)
+        if stored_view is not None:
+            render_best_candidate(stored_view)
 
 
 __all__ = ["run_page"]

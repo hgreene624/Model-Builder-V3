@@ -4,12 +4,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="3a0f8e7c-00d9-4699-9f00-5cef80cd1d44" name="Changes" comment="model builder - Phase 4 partially implemented">
+    <list default="true" id="3a0f8e7c-00d9-4699-9f00-5cef80cd1d44" name="Changes" comment="working portfolio equity graph">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pages/2_Model_Builder.py" beforeDir="false" afterPath="$PROJECT_DIR$/pages/2_Model_Builder.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/model_builder/ui/components/profile_editor.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model_builder/ui/components/profile_editor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/specs/003-the-model-builder/contracts/model-builder.openapi.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/specs/003-the-model-builder/contracts/model-builder.openapi.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/specs/003-the-model-builder/tasks.md" beforeDir="false" afterPath="$PROJECT_DIR$/specs/003-the-model-builder/tasks.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model_builder/analytics/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model_builder/analytics/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model_builder/ui/components/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model_builder/ui/components/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/model_builder/ui/pages/model_builder_page.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model_builder/ui/pages/model_builder_page.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/optimizer/workflow.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/optimizer/workflow.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_optimizer_workflow.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_optimizer_workflow.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -81,7 +84,7 @@
       <updated>1760113323568</updated>
       <workItem from="1760113324627" duration="17118000" />
       <workItem from="1760359549779" duration="2314000" />
-      <workItem from="1760361881445" duration="15665000" />
+      <workItem from="1760361881445" duration="18805000" />
     </task>
     <task id="LOCAL-00001" summary="Project Created">
       <option name="closed" value="true" />
@@ -171,7 +174,15 @@
       <option name="project" value="LOCAL" />
       <updated>1760366980786</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="working portfolio equity graph">
+      <option name="closed" value="true" />
+      <created>1760388191826</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1760388191826</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -199,6 +210,7 @@
     <MESSAGE value="phase 1 done" />
     <MESSAGE value="Home.py framework set up. Phase 3 done" />
     <MESSAGE value="model builder - Phase 4 partially implemented" />
-    <option name="LAST_COMMIT_MESSAGE" value="model builder - Phase 4 partially implemented" />
+    <MESSAGE value="working portfolio equity graph" />
+    <option name="LAST_COMMIT_MESSAGE" value="working portfolio equity graph" />
   </component>
 </project>

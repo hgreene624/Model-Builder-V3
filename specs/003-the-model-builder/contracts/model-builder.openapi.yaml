@@ -116,7 +116,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/CandidateEvaluation"
+                  $ref: "#/components/schemas/CandidateEvaluationEvent"
   /evaluation-runs/{run_id}/best-candidate:
     get:
       summary: Retrieve the best candidate snapshot for a run
@@ -284,6 +284,68 @@ components:
         parameter_payload:
           type: object
           additionalProperties: {}
+    CandidateEvaluationMetadata:
+      type: object
+      properties:
+        generation:
+          type: integer
+          minimum: 0
+        rank:
+          type: integer
+          minimum: 1
+        raw_score:
+          type: number
+        penalty:
+          type: number
+        stats:
+          type: object
+          additionalProperties:
+            type: number
+      additionalProperties: false
+    TelemetryEnvelope:
+      type: object
+      required:
+        - schema_version
+        - timestamp
+        - event_type
+        - run_id
+        - session
+        - sequence
+        - payload
+      properties:
+        schema_version:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        event_type:
+          type: string
+        run_id:
+          type: string
+        session:
+          type: string
+          description: Source of the event (`app`, `cli`, etc.).
+        sequence:
+          type: integer
+          minimum: 1
+        payload:
+          type: object
+          additionalProperties: {}
+        metadata:
+          type: object
+          additionalProperties: {}
+    CandidateEvaluationEvent:
+      allOf:
+        - $ref: "#/components/schemas/TelemetryEnvelope"
+        - type: object
+          properties:
+            event_type:
+              type: string
+              enum: ["candidate_evaluation"]
+            payload:
+              $ref: "#/components/schemas/CandidateEvaluation"
+            metadata:
+              $ref: "#/components/schemas/CandidateEvaluationMetadata"
     BestCandidateSnapshot:
       type: object
       required:
