@@ -1,10 +1,13 @@
 from __future__ import annotations
 
-from typing import Any, Dict
+from dataclasses import dataclass
+from typing import Any, Dict, Callable
 
 import pandas as pd
+import plotly.graph_objects as go
 import streamlit as st
 
+from model_builder.optimization.coverage import CoveragePlan
 from model_builder.profiles import ProfilesService, StrategyProfileRepository
 from model_builder.ui.components.profile_editor import ProfileEditorResult, render_profile_editor
 from src.config.settings import AppSettings
@@ -17,6 +20,99 @@ from src.storage.artifacts import ArtifactStore
 from src.storage.layout import StorageLayout
 
 SESSION_RESULTS_KEY = "model_builder_last_result"
+
+
+@dataclass(frozen=True)
+class EquitySplit:
+    training: pd.DataFrame
+    holdout: pd.DataFrame
+    training_column: str
+    holdout_column: str
+    expected_holdout_points: int
+    observed_holdout_points: int
+    train_end_ts: pd.Timestamp
+    holdout_start_ts: pd.Timestamp
+
+
+def _create_timezone_aligner(timestamp_series: pd.Series) -> Callable[[object], pd.Timestamp]:
+    tz = timestamp_series.dt.tz
+
+    def _align(value: object) -> pd.Timestamp:
+        ts = pd.Timestamp(value)
+        if tz is not None:
+            if ts.tz is None:
+                ts = ts.tz_localize(tz)
+            else:
+                ts = ts.tz_convert(tz)
+        elif ts.tz is not None:
+            ts = ts.tz_convert(None)
+        return ts
+
+    return _align
+
+
+def _resolve_equity_column_names(frame: pd.DataFrame, *, x_field: str) -> tuple[str, str]:
+    candidate_columns = [col for col in frame.columns if col != x_field]
+    if not candidate_columns:
+        raise ValueError("Equity curve frame requires at least one value column.")
+
+    def _pick(preferences: list[str]) -> str | None:
+        for column in preferences:
+            if column in frame.columns:
+                return column
+        return None
+
+    training_column = _pick(["train_equity", "training_equity", "equity"])
+    holdout_column = _pick(["holdout_equity", "equity"])
+
+    if training_column is None:
+        training_column = candidate_columns[0]
+    if holdout_column is None:
+        holdout_column = training_column
+
+    return training_column, holdout_column
+
+
+def _split_equity_curve(
+    frame: pd.DataFrame,
+    coverage: CoveragePlan,
+    *,
+    x_field: str,
+    training_column: str,
+    holdout_column: str,
+    align: Callable[[object], pd.Timestamp],
+) -> EquitySplit:
+    timestamp_series = frame[x_field]
+    train_end_ts = align(coverage.train.end)
+    holdout_start_ts = align(coverage.holdout.start)
+
+    normalized_series = timestamp_series.dt.normalize()
+    training_mask = normalized_series <= train_end_ts
+    holdout_mask = normalized_series >= holdout_start_ts
+    if not holdout_mask.any():
+        holdout_mask = timestamp_series >= holdout_start_ts
+
+    training_frame = frame.loc[training_mask].copy()
+    if training_column in training_frame.columns:
+        training_frame = training_frame.dropna(subset=[training_column])
+
+    holdout_frame = frame.loc[holdout_mask].copy()
+    if holdout_column in holdout_frame.columns:
+        holdout_frame = holdout_frame.dropna(subset=[holdout_column])
+
+    expected_holdout_points = int((timestamp_series >= holdout_start_ts).sum())
+    observed_holdout_points = len(holdout_frame)
+
+    return EquitySplit(
+        training=training_frame,
+        holdout=holdout_frame,
+        training_column=training_column,
+        holdout_column=holdout_column,
+        expected_holdout_points=expected_holdout_points,
+        observed_holdout_points=observed_holdout_points,
+        train_end_ts=train_end_ts,
+        holdout_start_ts=holdout_start_ts,
+    )
 
 
 def _load_portfolios(store: ArtifactStore, limit: int = 50) -> list[Portfolio]:
@@ -89,6 +185,151 @@ def _summarize_result(result: OptimizationResult) -> dict[str, Any]:
     return summary
 
 
+def _render_equity_curve(result: OptimizationResult) -> None:
+    st.subheader("Holdout Equity Curve (Train + Holdout)")
+    equity = result.equity_curve
+    if equity.empty:
+        st.caption("No equity curve returned for the optimisation run.")
+        return
+
+    frame = equity.copy()
+    if "timestamp" in frame.columns:
+        frame["timestamp"] = pd.to_datetime(frame["timestamp"])
+        x_field = "timestamp"
+    else:
+        frame = frame.reset_index().rename(columns={"index": "timestamp"})
+        frame["timestamp"] = pd.to_datetime(frame["timestamp"])
+        x_field = "timestamp"
+
+    candidate_columns = [col for col in frame.columns if col != x_field]
+    if not candidate_columns:
+        st.line_chart(frame.set_index(x_field))
+        return
+
+    try:
+        training_y_field, holdout_y_field = _resolve_equity_column_names(frame, x_field=x_field)
+    except ValueError:
+        st.line_chart(frame.set_index(x_field))
+        return
+
+    frame = frame.sort_values(x_field).reset_index(drop=True)
+    timestamp_series = frame[x_field]
+    align = _create_timezone_aligner(timestamp_series)
+
+    coverage = result.coverage_plan
+    split = _split_equity_curve(
+        frame,
+        coverage,
+        x_field=x_field,
+        training_column=training_y_field,
+        holdout_column=holdout_y_field,
+        align=align,
+    )
+
+    warmup_ts = align(coverage.warmup.slice.start)
+    train_start_ts = align(coverage.train.start)
+    holdout_start_ts = split.holdout_start_ts
+
+    training_frame = split.training
+    holdout_frame = split.holdout
+    holdout_warning: str | None = None
+    if split.expected_holdout_points > 0 and split.observed_holdout_points == 0:
+        holdout_warning = (
+            "Holdout equity curve returned only missing values; nothing to plot in orange."
+        )
+
+    fig = go.Figure()
+
+    fig.add_trace(
+        go.Scatter(
+            x=training_frame[x_field],
+            y=training_frame[split.training_column],
+            mode="lines",
+            name="Training",
+            line=dict(color="#1f77b4"),
+            hovertemplate="%{x|%Y-%m-%d}<br>Equity=%{y:.2f}<extra></extra>",
+        )
+    )
+    if not holdout_frame.empty:
+        fig.add_trace(
+            go.Scatter(
+                x=holdout_frame[x_field],
+                y=holdout_frame[split.holdout_column],
+                mode="lines",
+                name="Holdout",
+                line=dict(color="#ff7f0e"),
+                hovertemplate="%{x|%Y-%m-%d}<br>Equity=%{y:.2f}<extra></extra>",
+            )
+        )
+    elif split.expected_holdout_points > 0:
+        holdout_warning = "Holdout equity curve returned only missing values; nothing to plot in orange."
+
+    fig.update_xaxes(
+        tickformat="%b %Y",
+        dtick="M2",
+        ticklabelmode="period",
+        showline=True,
+        linewidth=1,
+        linecolor="rgba(0,0,0,0.4)",
+        mirror=True,
+    )
+    years = sorted(frame[x_field].dt.year.unique())
+    for year in years[1:]:
+        boundary = align(pd.Timestamp(year=year, month=1, day=1)).to_pydatetime()
+        fig.add_vline(
+            x=boundary,
+            line_dash="dash",
+            line_color="rgba(0,0,0,0.25)",
+            line_width=1,
+        )
+    fig.add_vrect(
+        x0=warmup_ts,
+        x1=train_start_ts,
+        fillcolor="rgba(31, 119, 180, 0.05)",
+        line_width=0,
+    )
+    fig.add_vline(
+        x=holdout_start_ts,
+        line_dash="dot",
+        line_color="#ff7f0e",
+        line_width=2,
+    )
+
+    warmup_midpoint = warmup_ts + (train_start_ts - warmup_ts) / 2
+    fig.add_annotation(
+        x=warmup_midpoint.to_pydatetime(),
+        y=1.02,
+        xref="x",
+        yref="paper",
+        text="Warmup",
+        showarrow=False,
+        align="left",
+        xanchor="left",
+        font=dict(color="rgba(31, 119, 180, 0.7)"),
+    )
+    fig.add_annotation(
+        x=holdout_start_ts.to_pydatetime(),
+        y=1.02,
+        xref="x",
+        yref="paper",
+        text="Holdout Start",
+        showarrow=False,
+        align="left",
+        xanchor="left",
+        font=dict(color="#ff7f0e"),
+    )
+
+    fig.update_layout(margin=dict(l=0, r=0, t=10, b=0))
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.caption(
+        f"Equity points · total {len(frame)} | training {len(training_frame)} | "
+        f"holdout {split.observed_holdout_points}/{split.expected_holdout_points}"
+    )
+    if holdout_warning:
+        st.caption(holdout_warning)
+
+
 def _display_result(result: OptimizationResult) -> None:
     st.success(f"Run {result.run_id} completed. Parameter set `{result.parameter_set.parameter_set_id}` saved.")
 
@@ -127,14 +368,7 @@ def _display_result(result: OptimizationResult) -> None:
     if result.issues:
         st.warning("\n".join(result.issues))
 
-    if not result.equity_curve.empty:
-        st.subheader("Holdout Equity Curve (Training Window)")
-        curve = result.equity_curve.copy()
-        if "timestamp" in curve.columns:
-            curve = curve.set_index("timestamp")
-        st.line_chart(curve.get("equity") or curve)
-    else:
-        st.caption("No equity curve returned for the training window.")
+    _render_equity_curve(result)
 
 
 def _build_objective(parameters: Dict[str, Any]) -> ObjectiveWeights:

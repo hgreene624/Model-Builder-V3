@@ -197,22 +197,46 @@ def risk_from_genome(genome: Dict[str, float], template: RiskSettings) -> RiskSe
     )
 
 
+def _build_signals_for_config(
+    bars_by_symbol: Dict[str, pd.DataFrame],
+    config: ATRBreakoutConfig,
+    risk: RiskSettings,
+) -> pd.DataFrame:
+    frames = [
+        atr_breakout_signals(symbol, frame, config, risk)
+        for symbol, frame in bars_by_symbol.items()
+    ]
+    if not frames:
+        return pd.DataFrame(columns=["timestamp", "symbol", "action", "weight", "metadata"])
+    return pd.concat(frames, ignore_index=True).sort_values("timestamp")
+
+
+def _evaluate_config(
+    *,
+    config: ATRBreakoutConfig,
+    risk: RiskSettings,
+    bars_by_symbol: Dict[str, pd.DataFrame],
+    price_matrix: pd.DataFrame,
+    initial_capital: float,
+    cost_model: CostModel,
+):
+    signals = _build_signals_for_config(bars_by_symbol, config, risk)
+    return run_backtest(
+        prices=price_matrix,
+        signals=signals,
+        initial_capital=initial_capital,
+        cost_model=cost_model,
+    )
+
+
 def evaluate_genome(genome: Dict[str, float], context: OptimizationContext) -> Dict[str, Dict[str, float]]:
     config = config_from_genome(genome, context.base_config)
     risk = risk_from_genome(genome, context.base_risk)
-    frames = [
-        atr_breakout_signals(symbol, frame, config, risk)
-        for symbol, frame in context.bars_by_symbol.items()
-    ]
-    signals = (
-        pd.concat(frames, ignore_index=True).sort_values("timestamp")
-        if frames
-        else pd.DataFrame(columns=["timestamp", "symbol", "action", "weight", "metadata"])
-    )
-
-    backtest = run_backtest(
-        prices=context.price_matrix,
-        signals=signals,
+    backtest = _evaluate_config(
+        config=config,
+        risk=risk,
+        bars_by_symbol=context.bars_by_symbol,
+        price_matrix=context.price_matrix,
         initial_capital=context.initial_capital,
         cost_model=context.cost_model,
     )
@@ -230,19 +254,11 @@ def backtest_best(
 ) -> Tuple[ATRBreakoutConfig, RiskSettings, pd.DataFrame, Dict[str, float], Dict[str, float]]:
     config = config_from_genome(genome, context.base_config)
     risk = risk_from_genome(genome, context.base_risk)
-    frames = [
-        atr_breakout_signals(symbol, frame, config, risk)
-        for symbol, frame in context.bars_by_symbol.items()
-    ]
-    signals = (
-        pd.concat(frames, ignore_index=True).sort_values("timestamp")
-        if frames
-        else pd.DataFrame(columns=["timestamp", "symbol", "action", "weight", "metadata"])
-    )
-
-    backtest = run_backtest(
-        prices=context.price_matrix,
-        signals=signals,
+    backtest = _evaluate_config(
+        config=config,
+        risk=risk,
+        bars_by_symbol=context.bars_by_symbol,
+        price_matrix=context.price_matrix,
         initial_capital=context.initial_capital,
         cost_model=context.cost_model,
     )
@@ -376,20 +392,34 @@ def run_optimization(
 
     warmup_start = coverage_plan.warmup.slice.start
     train_end = coverage_plan.train.end
+    holdout_end = coverage_plan.holdout.end
 
-    filtered_bars: Dict[str, pd.DataFrame] = {}
+    full_bars_by_symbol: Dict[str, pd.DataFrame] = {}
     for symbol, frame in bars_by_symbol.items():
-        sliced = _filter_frame_by_dates(frame, start=warmup_start, end=train_end)
-        if sliced.empty:
+        trimmed = _filter_frame_by_dates(frame, start=warmup_start, end=holdout_end)
+        if trimmed.empty:
+            raise ValueError(
+                f"No price data available for symbol '{symbol}' within coverage window "
+                f"{warmup_start} to {holdout_end}."
+            )
+        full_bars_by_symbol[symbol] = trimmed
+
+    full_price_matrix = _filter_frame_by_dates(price_matrix, start=warmup_start, end=holdout_end)
+    if full_price_matrix.empty:
+        raise ValueError("Coverage price data unavailable after applying coverage plan.")
+
+    training_bars_by_symbol: Dict[str, pd.DataFrame] = {}
+    for symbol, frame in full_bars_by_symbol.items():
+        training_slice = _filter_frame_by_dates(frame, start=warmup_start, end=train_end)
+        if training_slice.empty:
             raise ValueError(
                 f"No price data available for symbol '{symbol}' within training window "
                 f"{warmup_start} to {train_end}."
             )
-        filtered_bars[symbol] = sliced
-    bars_by_symbol = filtered_bars
+        training_bars_by_symbol[symbol] = training_slice
 
-    price_matrix = _filter_frame_by_dates(price_matrix, start=warmup_start, end=train_end)
-    if price_matrix.empty:
+    training_price_matrix = _filter_frame_by_dates(full_price_matrix, start=warmup_start, end=train_end)
+    if training_price_matrix.empty:
         raise ValueError("Training price data unavailable after applying coverage plan.")
 
     if coverage_plan.warmup.deficit_days > 0:
@@ -399,8 +429,8 @@ def run_optimization(
         )
 
     context = OptimizationContext(
-        bars_by_symbol=bars_by_symbol,
-        price_matrix=price_matrix,
+        bars_by_symbol=training_bars_by_symbol,
+        price_matrix=training_price_matrix,
         base_config=base_config,
         base_risk=base_risk,
         initial_capital=initial_capital,
@@ -471,7 +501,17 @@ def run_optimization(
         seed=seed,
     )
 
-    best_config, best_risk, equity_curve, metrics, stats = backtest_best(parameter_set.parameters, context)
+    best_config, best_risk, _, metrics, stats = backtest_best(parameter_set.parameters, context)
+
+    full_backtest = _evaluate_config(
+        config=best_config,
+        risk=best_risk,
+        bars_by_symbol=full_bars_by_symbol,
+        price_matrix=full_price_matrix,
+        initial_capital=initial_capital,
+        cost_model=cost_model,
+    )
+    equity_curve = pd.DataFrame(full_backtest.equity_curve)
 
     return OptimizationResult(
         parameter_set=parameter_set,

@@ -58,6 +58,7 @@ A researcher chooses the default ATR breakout model, adjusts its parameters and 
 
 1. **Given** a curated portfolio and selected ATR model, **When** optimization begins, **Then** the workspace streams generation-by-generation metrics including fitness scores and equity snapshots.
 2. **Given** optimization completes, **When** the user saves a genome, **Then** it is stored with parameter values, performance metrics, and links to the portfolio and model.
+3. **Given** the researcher adjusts train percentage or warmup values in the Model Builder profile editor, **When** the optimization workspace renders coverage details, **Then** the summary banner, coverage table, and holdout equity preview immediately reflect the active (unsaved) form state without requiring a profile save.
 
 ---
 
@@ -121,6 +122,7 @@ A researcher selects a stored parameter set, runs a fresh simulation, reviews KP
 - **FR-004**: The system must enforce a shared model contract defining required inputs, outputs, and parameter metadata, and auto-discover compliant models placed in the designated directory.
 - **FR-005**: The ATR breakout model must expose tunable parameters for ATR window, breakout multiplier, lookback period, risk-aware sizing toggle, and minimum/maximum sizing rails.
 - **FR-006**: Optimization runs must support configurable parameter bounds, deterministic seeds, pause/resume controls, live progress updates, and holdout equity visualization.
+- **FR-006a**: Coverage summaries and holdout graphs on the optimization page must derive from the in-session editor state, applying unsaved adjustments (e.g., train percentage, warmup days) before persistence so previews stay aligned with the next run configuration.
 - **FR-007**: The platform must compute and display benchmark comparisons, trade counts, cost drag, and rolling performance for each optimization run and simulation.
 - **FR-008**: Saved parameter sets must remain reusable across UI and CLI experiences, including fitness metrics, references to source portfolio/model, and timestamps.
 - **FR-009**: The log inspector must parse stored logs into per-generation records, support filtering and bookmarking, and surface detailed metadata for debugging.

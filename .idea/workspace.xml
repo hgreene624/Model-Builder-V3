@@ -4,15 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="3a0f8e7c-00d9-4699-9f00-5cef80cd1d44" name="Changes" comment="Home.py framework set up. Phase 3 done">
+    <list default="true" id="3a0f8e7c-00d9-4699-9f00-5cef80cd1d44" name="Changes" comment="model builder - Phase 4 partially implemented">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pages/2_Model_Builder.py" beforeDir="false" afterPath="$PROJECT_DIR$/pages/2_Model_Builder.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/specs/003-the-model-builder/tasks.md" beforeDir="false" afterPath="$PROJECT_DIR$/specs/003-the-model-builder/tasks.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/optimizer/evolutionary.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/optimizer/evolutionary.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model_builder/ui/components/profile_editor.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model_builder/ui/components/profile_editor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model_builder/ui/pages/model_builder_page.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model_builder/ui/pages/model_builder_page.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/optimizer/workflow.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/optimizer/workflow.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/storage/layout.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/storage/layout.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/conftest.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/conftest.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -84,7 +81,7 @@
       <updated>1760113323568</updated>
       <workItem from="1760113324627" duration="17118000" />
       <workItem from="1760359549779" duration="2314000" />
-      <workItem from="1760361881445" duration="4666000" />
+      <workItem from="1760361881445" duration="15665000" />
     </task>
     <task id="LOCAL-00001" summary="Project Created">
       <option name="closed" value="true" />
@@ -166,7 +163,15 @@
       <option name="project" value="LOCAL" />
       <updated>1760127537604</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="model builder - Phase 4 partially implemented">
+      <option name="closed" value="true" />
+      <created>1760366980786</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1760366980786</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -193,6 +198,7 @@
     <MESSAGE value="phase 0 done" />
     <MESSAGE value="phase 1 done" />
     <MESSAGE value="Home.py framework set up. Phase 3 done" />
-    <option name="LAST_COMMIT_MESSAGE" value="Home.py framework set up. Phase 3 done" />
+    <MESSAGE value="model builder - Phase 4 partially implemented" />
+    <option name="LAST_COMMIT_MESSAGE" value="model builder - Phase 4 partially implemented" />
   </component>
 </project>

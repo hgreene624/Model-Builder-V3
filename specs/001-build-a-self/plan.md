@@ -7,6 +7,8 @@
 
 Deliver a self-hosted, Streamlit-based workspace that orchestrates the research loop end to end. The Streamlit entrypoint (`Home.py`) validates Alpaca credentials, falls back to Yahoo Finance when absent, and routes users to dedicated pages for portfolio curation, model evolution, log inspection, and simulation review. Core services live in Python 3.12 modules leveraging pandas/numpy for analytics, a custom backtest engine implementing the ATR breakout baseline, and an evolutionary optimizer that streams weighted CAGR/Calmar/Sharpe telemetry back to the UI. Artifacts (portfolios, parameters, simulations, logs, benchmarks) persist through a storage layer that enforces normalized schemas, atomic writes, and predictable folder layouts. Observability relies on append-only JSONL logs consumable by both UI and CLI inspectors.
 
+**Integration Guardrail**: The Model Builder page treats the profile editor as the live source of truth—coverage summaries, train/holdout splits, and plots must react to in-session adjustments (train percentage, warmup days, parameter bounds) even before a profile is saved. Downstream graphs should consume this draft state to stay in sync with the next optimization run.
+
 ## Technical Context
 
 **Language/Version**: Python 3.12 with strict typing  
