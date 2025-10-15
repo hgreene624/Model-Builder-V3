@@ -156,33 +156,6 @@ def _select_candidate_event(history: Sequence[Mapping[str, Any]], candidate_id: 
     return history[-1]
 
 
-def _filter_holdout_trades(
-    trades: Sequence[Any],
-    holdout_start: str,
-) -> List[Any]:
-    holdout_start_ts = pd.Timestamp(holdout_start)
-    holdout_start_norm = holdout_start_ts.tz_convert(None) if holdout_start_ts.tz is not None else holdout_start_ts
-
-    filtered: List[Any] = []
-    for trade in trades:
-        payload = trade
-        timestamp = pd.Timestamp(payload.timestamp if hasattr(payload, "timestamp") else payload.get("timestamp"))
-        exit_value = getattr(payload, "exit_timestamp", None)
-        if exit_value is None and isinstance(payload, Mapping):
-            exit_value = payload.get("exit_timestamp")
-
-        entry_norm = timestamp.tz_convert(None) if timestamp.tz is not None else timestamp
-        exit_norm = None
-        if exit_value:
-            exit_ts = pd.Timestamp(exit_value)
-            exit_norm = exit_ts.tz_convert(None) if exit_ts.tz is not None else exit_ts
-
-        include = entry_norm >= holdout_start_norm
-        if not include and exit_norm is not None:
-            include = exit_norm >= holdout_start_norm
-        if include:
-            filtered.append(trade)
-    return filtered
 
 
 def build_best_candidate_view(result) -> BestCandidateView | None:  # type: ignore[valid-type]
@@ -221,8 +194,13 @@ def build_best_candidate_view(result) -> BestCandidateView | None:  # type: igno
         )
     heatmap = build_momentum_heatmap(holdout_series)
 
-    holdout_trades = _filter_holdout_trades(result.trades, coverage_plan.holdout.start.isoformat())
-    trade_timeline = build_trade_timeline(holdout_trades)
+    window_start = coverage_plan.holdout.start.isoformat()
+    window_end = coverage_plan.holdout.end.isoformat()
+    trade_timeline = build_trade_timeline(
+        result.trades,
+        window_start=window_start,
+        window_end=window_end,
+    )
 
     return BestCandidateView(
         run_id=result.run_id,
@@ -348,41 +326,69 @@ def _build_timeline_figure(timeline: Dict[str, Any]) -> go.Figure:
         return fig
 
     frame = pd.DataFrame(points)
-    frame["timestamp"] = pd.to_datetime(frame["timestamp"])
-    frame["pnl"] = frame["pnl"].astype(float)
-    frame["notional"] = frame["notional"].astype(float)
-    frame["marker_color"] = frame["pnl_direction"].apply(
-        lambda direction: POSITIVE_COLOR if direction == "gain" else NEGATIVE_COLOR if direction == "loss" else NEUTRAL_COLOR
-    )
+    frame["entry"] = pd.to_datetime(frame["entry"])
+    frame["exit"] = pd.to_datetime(frame["exit"])
+    frame["return_pct"] = frame["return_pct"].astype(float)
+    frame["bar_width"] = frame["bar_width"].astype(float)
+    frame["size_fraction"] = frame["size_fraction"].astype(float)
+    frame["duration_days"] = frame["duration_days"].astype(float)
 
-    max_notional = frame["notional"].max()
-    if max_notional > 0:
-        sizeref = 2 * max_notional / (40**2)
-        sizes = frame["notional"]
-    else:
-        sizeref = 1
-        sizes = pd.Series([12.0] * len(frame))
+    return_series = frame["return_pct"].fillna(0.0)
+    color_domain = timeline.get("color_domain")
+    if color_domain is None or color_domain <= 0:
+        color_domain = max(1.0, return_series.abs().max())
 
-    hover_text = []
+    hover_text: List[str] = []
     for row in frame.itertuples():
-        duration = f"{row.duration_days:.1f}d" if row.duration_days is not None else "open"
-        hover_text.append(
-            f"{row.symbol} | Notional {row.notional:,.0f} | P&L {row.pnl:,.2f} | Duration {duration}"
-        )
+        metadata = row.metadata or {}
+        formatted_return = "n/a" if pd.isna(row.return_pct) else f"{row.return_pct:.2f}%"
+        actual_entry = row.metadata.get("entry_actual", row.entry.isoformat()) if isinstance(row.metadata, dict) else row.entry.isoformat()
+        actual_exit = row.metadata.get("exit_actual", row.exit.isoformat()) if isinstance(row.metadata, dict) else row.exit.isoformat()
+        lines = [
+            f"Symbol={row.symbol}",
+            f"Entry (holdout)={row.entry:%Y-%m-%d %H:%M:%S}",
+            f"Exit (holdout)={row.exit:%Y-%m-%d %H:%M:%S}",
+            f"Entry (actual)={pd.Timestamp(actual_entry):%Y-%m-%d %H:%M:%S}",
+            f"Exit (actual)={pd.Timestamp(actual_exit):%Y-%m-%d %H:%M:%S}",
+            f"Return={formatted_return}",
+            f"Duration={row.duration_days:.1f} days",
+            f"Quantity={row.quantity:,.2f}",
+            f"P&L={row.pnl:,.2f}",
+            f"Notional={row.notional:,.2f}",
+        ]
+        if row.portfolio_notional is not None:
+            lines.append(f"Portfolio Notional={row.portfolio_notional:,.2f}")
+        weight_pct = metadata.get("portfolio_weight_pct")
+        if weight_pct is not None:
+            lines.append(f"Weight={float(weight_pct):.2f}%")
+        weight_fraction = metadata.get("portfolio_weight")
+        if weight_fraction is not None:
+            lines.append(f"Weight Fraction={float(weight_fraction):.4f}")
+        risk_reward = metadata.get("risk_reward")
+        if risk_reward is not None:
+            lines.append(f"Risk/Reward={risk_reward}")
+        mae = metadata.get("max_adverse_excursion")
+        if mae is not None:
+            lines.append(f"Max Adverse Excursion={mae}")
+        mfe = metadata.get("max_favorable_excursion")
+        if mfe is not None:
+            lines.append(f"Max Favorable Excursion={mfe}")
+        size_fraction = metadata.get("size_fraction")
+        if size_fraction is not None:
+            lines.append(f"Size Fraction={float(size_fraction):.2f}")
+        hover_text.append("<br>".join(lines))
 
     fig.add_trace(
-        go.Scatter(
-            x=frame["timestamp"],
-            y=frame["pnl"],
-            mode="markers",
+        go.Bar(
+            y=frame["symbol"],
+            x=(frame["exit"] - frame["entry"]),
+            base=frame["entry"],
+            orientation="h",
             marker=dict(
-                size=sizes,
-                sizemode="area",
-                sizeref=sizeref,
-                sizemin=8,
-                color=frame["marker_color"],
-                line=dict(width=0.6, color="rgba(0,0,0,0.4)"),
+                color=frame["return_pct"],
+                coloraxis="coloraxis",
             ),
+            width=frame["bar_width"],
             hovertemplate="%{text}<extra></extra>",
             text=hover_text,
         )
@@ -390,14 +396,25 @@ def _build_timeline_figure(timeline: Dict[str, Any]) -> go.Figure:
 
     fig.update_layout(
         margin=dict(l=0, r=0, t=10, b=0),
+        coloraxis=dict(
+            colorscale=timeline.get("color_scale", "RdYlGn"),
+            cmin=-color_domain,
+            cmax=color_domain,
+            colorbar=dict(title="Return (%)"),
+        ),
+        title="Holdout trade timeline",
         showlegend=False,
     )
-    fig.update_xaxes(showgrid=False)
-    fig.update_yaxes(
-        title="P&L",
-        zeroline=True,
-        zerolinewidth=1,
-        zerolinecolor="rgba(0,0,0,0.3)",
+    window_start = timeline.get("window_start")
+    window_end = timeline.get("window_end")
+    xaxis_kwargs: Dict[str, Any] = {"title": "Date", "type": "date"}
+    if window_start and window_end:
+        xaxis_kwargs["range"] = [window_start, window_end]
+    fig.update_xaxes(**xaxis_kwargs)
+    fig.update_yaxes(title="Symbol", autorange="reversed")
+
+    fig.update_layout(
+        bargap=0.2,
     )
     return fig
 
@@ -436,10 +453,13 @@ def render_best_candidate(view: BestCandidateView) -> None:
     with col_timeline:
         timeline_fig = _build_timeline_figure(view.timeline)
         st.plotly_chart(timeline_fig, use_container_width=True)
-        st.caption(
-            f"Trades · wins {view.timeline.get('wins', 0)} | losses {view.timeline.get('losses', 0)} "
-            f"| flats {view.timeline.get('flats', 0)} · total notional {view.timeline.get('total_notional', 0):,.0f}"
-        )
+        if not view.timeline.get("points"):
+            st.caption("No trades executed within the selected window.")
+        else:
+            st.caption(
+                f"Trades · wins {view.timeline.get('wins', 0)} | losses {view.timeline.get('losses', 0)} "
+                f"| flats {view.timeline.get('flats', 0)} · total notional {view.timeline.get('total_notional', 0):,.0f}"
+            )
 
 
 def store_best_candidate(session_state: MutableMapping[str, Any], view: BestCandidateView) -> None:

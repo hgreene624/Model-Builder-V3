@@ -75,6 +75,10 @@ def test_best_candidate_view_roundtrip() -> None:
     assert "windows" in view.heatmap and "matrix" in view.heatmap
     assert len(view.heatmap["windows"]) > 0
     assert "points" in view.timeline
+    if view.timeline["points"]:
+        timeline_point = view.timeline["points"][0]
+        assert "entry" in timeline_point and "exit" in timeline_point
+        assert "return_pct" in timeline_point
 
     session_state: dict[str, object] = {}
     store_best_candidate(session_state, view)

@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 from typing import Any, Mapping, Optional, Sequence
 
 import click
 
 from model_builder.profiles import ProfileNotFoundError, ProfilesService, StrategyProfileRepository
+from model_builder.optimization import EVENT_TYPE_CANDIDATE_EVALUATION
 from model_builder.optimization.telemetry import TelemetryLogWriter
 from src.config.settings import AppSettings
 from src.engine.atr_breakout import ATRBreakoutConfig, RiskSettings
@@ -79,6 +81,48 @@ def _merge_payload(
             raise click.ClickException("Parameters payload must be a JSON object.")
         payload["parameters"] = dict(parsed)
     return payload
+
+
+def _stream_candidate_events(
+    log_path: Path,
+    *,
+    follow: bool,
+    payload_only: bool,
+    poll_interval: float = 0.5,
+) -> None:
+    """Stream candidate evaluation envelopes from a telemetry log."""
+
+    if not log_path.exists():
+        raise click.ClickException(f"Telemetry log was not found at '{log_path}'.")
+
+    try:
+        with log_path.open("r", encoding="utf-8") as handle:
+            while True:
+                line = handle.readline()
+                if line:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        envelope = json.loads(line)
+                    except json.JSONDecodeError as exc:
+                        click.echo(f"Skipping malformed telemetry line: {exc}", err=True)
+                        continue
+
+                    if envelope.get("event_type") != EVENT_TYPE_CANDIDATE_EVALUATION:
+                        continue
+
+                    output_obj = envelope.get("payload") if payload_only else envelope
+                    if output_obj is None:
+                        continue
+
+                    click.echo(json.dumps(output_obj, separators=(",", ":"), ensure_ascii=True))
+                else:
+                    if not follow:
+                        break
+                    time.sleep(poll_interval)
+    except KeyboardInterrupt:
+        raise SystemExit(0)
 
 
 def _objective_weights(parameters: Mapping[str, Any]) -> ObjectiveWeights:
@@ -158,6 +202,33 @@ def cli() -> None:
 @cli.group()
 def profiles() -> None:
     """Manage strategy profiles."""
+
+
+@cli.group()
+def evaluations() -> None:
+    """Inspect evaluation telemetry."""
+
+
+@evaluations.command("live-tail")
+@click.option("--run-id", required=True, help="Evaluation run identifier.")
+@click.option(
+    "--follow/--no-follow",
+    default=True,
+    show_default=True,
+    help="Continue streaming new events until interrupted.",
+)
+@click.option(
+    "--payload-only",
+    is_flag=True,
+    help="Emit only the candidate payload instead of the full telemetry envelope.",
+)
+def evaluations_live_tail(run_id: str, follow: bool, payload_only: bool) -> None:
+    """Stream candidate evaluation telemetry for a run."""
+
+    settings = AppSettings.from_env()
+    layout = StorageLayout(settings.data_dir)
+    log_path = layout.evaluations_directory() / f"{run_id}.jsonl"
+    _stream_candidate_events(log_path, follow=follow, payload_only=payload_only)
 
 
 @profiles.command("list")

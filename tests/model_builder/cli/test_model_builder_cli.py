@@ -4,8 +4,10 @@ import json
 from pathlib import Path
 
 from click.testing import CliRunner
+import pytest
 
 from model_builder.cli.model_builder import cli
+from model_builder.optimization import EVENT_TYPE_CANDIDATE_EVALUATION, TelemetryLogWriter
 from model_builder.profiles import ProfilesService, StrategyProfileRepository
 from src.models.contracts import Portfolio
 from src.storage.artifacts import ArtifactStore
@@ -150,3 +152,43 @@ def test_optimize_command_writes_metadata(tmp_path: Path) -> None:
     run_completed = next((env for env in envelopes if env.get("event_type") == "run_completed"), None)
     assert run_completed is not None, "run_completed event missing from telemetry log"
     assert run_completed["payload"]["parameter_path"] == summary["parameter_path"]
+
+
+def test_live_tail_streams_candidate_events(tmp_path: Path) -> None:
+    layout = StorageLayout(root=tmp_path)
+    writer = TelemetryLogWriter(run_id="run-live", layout=layout, session="cli")
+    writer.emit(
+        "run_started",
+        {"profile_id": "profile-1"},
+    )
+    writer.emit(
+        EVENT_TYPE_CANDIDATE_EVALUATION,
+        {
+            "candidate_id": "cand-42",
+            "score": 1.08,
+            "score_delta": 0.03,
+            "metrics": {"cagr": 0.14, "sharpe": 1.9},
+            "timestamp": "2025-01-01T12:00:00.000Z",
+            "parameter_payload": {"atr_window": 18},
+        },
+        metadata={"generation": 3},
+    )
+    writer.emit(
+        "run_completed",
+        {"profile_id": "profile-1"},
+    )
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        ["evaluations", "live-tail", "--run-id", "run-live", "--no-follow"],
+        env=_env(tmp_path),
+    )
+
+    assert result.exit_code == 0, result.output
+    lines = [json.loads(line) for line in result.output.strip().splitlines() if line.strip()]
+    assert len(lines) == 1
+    envelope = lines[0]
+    assert envelope["event_type"] == EVENT_TYPE_CANDIDATE_EVALUATION
+    assert envelope["payload"]["candidate_id"] == "cand-42"
+    assert envelope["payload"]["score_delta"] == pytest.approx(0.03)

@@ -4,6 +4,7 @@ import pandas as pd
 import pytest
 
 from model_builder.analytics import TradeTimeline, build_trade_timeline
+from model_builder.analytics.trade_timeline import MAX_WIDTH, MIN_WIDTH
 from src.models.contracts import TradeRecord
 
 
@@ -51,7 +52,11 @@ def test_build_trade_timeline_from_trade_records() -> None:
         ),
     ]
 
-    timeline = build_trade_timeline(trades)
+    timeline = build_trade_timeline(
+        trades,
+        window_start="2024-01-01T00:00:00+00:00",
+        window_end="2024-02-01T00:00:00+00:00",
+    )
 
     assert isinstance(timeline, TradeTimeline)
     assert timeline.wins == 1
@@ -61,14 +66,16 @@ def test_build_trade_timeline_from_trade_records() -> None:
 
     point_one, point_two = timeline.points
     assert point_one.symbol == "AAPL"
-    assert point_one.side == "long"
-    assert point_one.pnl_direction == "gain"
     assert point_one.duration_days == pytest.approx(15.0)
+    assert point_one.return_pct is not None and point_one.return_pct > 0
+    assert MIN_WIDTH <= point_one.bar_width <= MAX_WIDTH
+    assert point_one.display_duration_days == pytest.approx(15.0)
 
     assert point_two.symbol == "MSFT"
-    assert point_two.side == "short"
-    assert point_two.pnl_direction == "loss"
     assert point_two.duration_days == pytest.approx(8.0)
+    assert point_two.return_pct is not None and point_two.return_pct < 0
+    assert MIN_WIDTH <= point_two.bar_width <= MAX_WIDTH
+    assert point_two.display_duration_days == pytest.approx(8.0)
 
 
 def test_build_trade_timeline_accepts_mapping_payload() -> None:
@@ -79,21 +86,30 @@ def test_build_trade_timeline_accepts_mapping_payload() -> None:
             "quantity": 0,
             "price": 200.0,
             "pnl": 0.0,
+            "exit_timestamp": "2024-02-03T00:00:00+00:00",
         }
     ]
 
-    timeline = build_trade_timeline(trades)
+    timeline = build_trade_timeline(
+        trades,
+        window_start="2024-02-01T00:00:00+00:00",
+        window_end="2024-02-05T00:00:00+00:00",
+    )
 
     assert len(timeline.points) == 1
     point = timeline.points[0]
-    assert point.side == "flat"
-    assert point.pnl_direction == "flat"
-    assert point.notional == 0.0
-    assert point.duration_days is None
+    assert point.return_pct is None
+    assert point.duration_days == pytest.approx(2.0)
+    assert point.display_duration_days == pytest.approx(2.0)
 
 
-def test_build_trade_timeline_requires_timestamp() -> None:
+def test_build_trade_timeline_skips_missing_exit() -> None:
     trades = [{"symbol": "ABC", "quantity": 10, "price": 5.0, "pnl": 1.0}]
 
-    with pytest.raises(ValueError):
-        build_trade_timeline(trades)
+    timeline = build_trade_timeline(
+        trades,
+        window_start="2024-01-01T00:00:00+00:00",
+        window_end="2024-12-31T00:00:00+00:00",
+    )
+
+    assert timeline.points == []

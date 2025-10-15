@@ -78,7 +78,7 @@
 - [X] T020 [US2] Implement evaluation appender in `src/model_builder/optimization/runner.py` that streams candidate events to telemetry writer and returns session payloads.
 - [X] T021 [US2] Add session-scoped state manager in `src/model_builder/ui/components/live_evaluations.py` that resets table on new run ID and appends candidate rows.
 - [X] T022 [US2] Update Streamlit page `model_builder_page.py` to subscribe to telemetry events, render the live evaluations component, and surface score deltas.
-- [ ] T023 [US2] Extend CLI command `evaluations live-tail` in `src/model_builder/cli/model_builder.py` to stream candidate events using the same telemetry logs.
+- [X] T023 [US2] Extend CLI command `evaluations live-tail` in `src/model_builder/cli/model_builder.py` to stream candidate events using the same telemetry logs.
 - [X] T024 [US2] Update OpenAPI contract `specs/003-the-model-builder/contracts/model-builder.openapi.yaml` with any field changes introduced by telemetry payloads (if needed).
 
 **Checkpoint**: User Stories 1 and 2 work independently.
