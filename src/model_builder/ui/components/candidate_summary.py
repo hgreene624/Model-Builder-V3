@@ -34,6 +34,7 @@ class BestCandidateView:
     coverage: Dict[str, str]
     heatmap: Dict[str, Any]
     timeline: Dict[str, Any]
+    all_trades: List[Any]  # Store all trades for dynamic timeline building
 
     def to_session(self) -> Dict[str, Any]:
         return {
@@ -49,6 +50,7 @@ class BestCandidateView:
             "coverage": self.coverage,
             "heatmap": self.heatmap,
             "timeline": self.timeline,
+            "all_trades": self.all_trades,
         }
 
     @classmethod
@@ -72,6 +74,7 @@ class BestCandidateView:
             coverage=dict(payload.get("coverage") or {}),
             heatmap=dict(payload.get("heatmap") or {}),
             timeline=dict(payload.get("timeline") or {}),
+            all_trades=list(payload.get("all_trades") or []),
         )
 
 
@@ -215,6 +218,7 @@ def build_best_candidate_view(result) -> BestCandidateView | None:  # type: igno
         coverage=coverage,
         heatmap=heatmap.to_dict(),
         timeline=trade_timeline.to_dict(),
+         all_trades=result.trades,
     )
 
 
@@ -533,30 +537,32 @@ def render_best_candidate(view: BestCandidateView) -> None:
         equity_fig.update_xaxes(range=[pd.to_datetime(window_start), pd.to_datetime(window_end)])
     st.plotly_chart(equity_fig, use_container_width=True)
 
+    st.write("")  # Add vertical spacing
+
     # Rebuild heatmap with selected window
-    from model_builder.analytics import build_momentum_heatmap
+    from model_builder.analytics import build_momentum_heatmap, build_trade_timeline
     heatmap_data = build_momentum_heatmap(equity_series)
     heatmap_fig = _build_heatmap_figure(heatmap_data.to_dict())
     st.plotly_chart(heatmap_fig, use_container_width=True)
     st.caption(heatmap_data.to_dict().get("narrative", ""))
 
-    # Rebuild timeline with selected window - need to get trades from result
-    # For now, use the existing timeline but update the window range
-    from model_builder.analytics import build_trade_timeline
-    # We need access to the full trades list, but it's not in the view
-    # For now, just update the x-axis range
-    timeline_fig = _build_timeline_figure(view.timeline)
-    if show_full_window and window_start and window_end:
-        timeline_fig.update_xaxes(range=[pd.to_datetime(window_start), pd.to_datetime(window_end)])
-    elif not show_full_window and window_start and window_end:
-        timeline_fig.update_xaxes(range=[pd.to_datetime(window_start), pd.to_datetime(window_end)])
+    st.write("")  # Add vertical spacing
+
+    # Rebuild timeline with selected window using all trades
+    timeline_data = build_trade_timeline(
+        view.all_trades,
+        window_start=window_start,
+        window_end=window_end,
+    )
+    timeline_fig = _build_timeline_figure(timeline_data.to_dict())
     st.plotly_chart(timeline_fig, use_container_width=True)
-    if not view.timeline.get("points"):
+    timeline_dict = timeline_data.to_dict()
+    if not timeline_dict.get("points"):
         st.caption("No trades executed within the selected window.")
     else:
         st.caption(
-            f"Trades · wins {view.timeline.get('wins', 0)} | losses {view.timeline.get('losses', 0)} "
-            f"| flats {view.timeline.get('flats', 0)} · total notional {view.timeline.get('total_notional', 0):,.0f}"
+            f"Trades · wins {timeline_dict.get('wins', 0)} | losses {timeline_dict.get('losses', 0)} "
+            f"| flats {timeline_dict.get('flats', 0)} · total notional {timeline_dict.get('total_notional', 0):,.0f}"
         )
 
 

@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="3a0f8e7c-00d9-4699-9f00-5cef80cd1d44" name="Changes" comment="reformatting of model builder dashboard" />
+    <list default="true" id="3a0f8e7c-00d9-4699-9f00-5cef80cd1d44" name="Changes" comment="model builder dashboard date range toggle">
+      <change beforePath="$PROJECT_DIR$/specs/003-the-model-builder/tasks.md" beforeDir="false" afterPath="$PROJECT_DIR$/specs/003-the-model-builder/tasks.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model_builder/ui/components/candidate_summary.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model_builder/ui/components/candidate_summary.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -77,7 +80,7 @@
       <workItem from="1760359549779" duration="2314000" />
       <workItem from="1760361881445" duration="34908000" />
       <workItem from="1760462003973" duration="18095000" />
-      <workItem from="1760717314765" duration="1110000" />
+      <workItem from="1760717314765" duration="1455000" />
     </task>
     <task id="LOCAL-00001" summary="Project Created">
       <option name="closed" value="true" />
@@ -215,7 +218,15 @@
       <option name="project" value="LOCAL" />
       <updated>1760718268059</updated>
     </task>
-    <option name="localTasksCounter" value="18" />
+    <task id="LOCAL-00018" summary="model builder dashboard date range toggle">
+      <option name="closed" value="true" />
+      <created>1760718484151</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1760718484151</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -248,6 +259,7 @@
     <MESSAGE value="finished task T023" />
     <MESSAGE value="Working trades graph" />
     <MESSAGE value="reformatting of model builder dashboard" />
-    <option name="LAST_COMMIT_MESSAGE" value="reformatting of model builder dashboard" />
+    <MESSAGE value="model builder dashboard date range toggle" />
+    <option name="LAST_COMMIT_MESSAGE" value="model builder dashboard date range toggle" />
   </component>
 </project>
