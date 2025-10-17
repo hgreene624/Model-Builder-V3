@@ -313,7 +313,7 @@ def _build_heatmap_figure(heatmap: Dict[str, Any]) -> go.Figure:
         )
     )
     fig.update_layout(
-        margin=dict(l=0, r=0, t=10, b=0),
+        margin=dict(l=0, r=0, t=40, b=0),
         title="Rolling performance heatmap",
         showlegend=False,
     )
@@ -457,8 +457,8 @@ def _build_timeline_figure(timeline: Dict[str, Any]) -> go.Figure:
         xaxis_kwargs["range"] = [start_ts, end_ts]
 
     fig.update_layout(
-        margin=dict(l=0, r=0, t=10, b=0),
-        title="Holdout trade timeline",
+        margin=dict(l=0, r=0, t=40, b=0),
+        title="Trade Detail Timeline",
         showlegend=False,
     )
     fig.update_xaxes(**xaxis_kwargs)
