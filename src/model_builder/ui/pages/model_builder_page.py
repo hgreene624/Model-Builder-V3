@@ -341,8 +341,6 @@ def _display_result(result: OptimizationResult) -> None:
 
     col_a, col_b = st.columns(2)
     with col_a:
-        st.caption("Best Parameters")
-        st.json(result.parameter_set.parameters)
         st.caption("Best Config")
         st.json(
             {
@@ -360,13 +358,13 @@ def _display_result(result: OptimizationResult) -> None:
         metrics_frame = pd.DataFrame([result.metrics, result.stats]).T
         metrics_frame.columns = ["Score", "Stat"]
         st.dataframe(metrics_frame, use_container_width=True)
-        st.caption("Artifacts")
-        st.write(
-            {
-                "log_path": str(result.log_path),
-                "parameter_path": str(result.parameter_path),
-            }
-        )
+        with st.expander("Artifacts", expanded=False):
+            st.write(
+                {
+                    "log_path": str(result.log_path),
+                    "parameter_path": str(result.parameter_path),
+                }
+            )
 
     st.caption("Coverage Plan")
     st.dataframe(_coverage_table(result), use_container_width=True)
@@ -520,8 +518,6 @@ def run_page() -> None:
             st.session_state[SESSION_RESULTS_KEY] = summary
             _display_result(result)
     elif SESSION_RESULTS_KEY in st.session_state:
-        st.subheader("Most Recent Run")
-        st.json(st.session_state[SESSION_RESULTS_KEY])
         stored_view = load_best_candidate(st.session_state)
         if stored_view is not None:
             render_best_candidate(stored_view)
