@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from datetime import date, datetime
-from typing import Any, Dict, Mapping
+from typing import Any
 
 from .constants import (
     DEFAULT_ATR_WARMUP_DAYS,
@@ -95,7 +96,7 @@ class CoverageWindow:
             "warmup_start must be on or before train_start.",
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "portfolio_id": self.portfolio_id,
             "coverage_start": _iso_date(self.coverage_start),
@@ -162,7 +163,7 @@ class StrategyProfile:
             "updated_at must be on or after created_at.",
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "schema_version": self.schema_version,
             "profile_id": self.profile_id,

@@ -1,11 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict
 
 import numpy as np
 import pandas as pd
-
 
 REQUIRED_COLUMNS = ("high", "low", "close")
 
@@ -44,7 +42,9 @@ class RiskSettings:
             raise ValueError("min_weight cannot exceed max_weight")
         if self.enabled and self.risk_fraction <= 0:
             raise ValueError("risk_fraction must be positive when risk sizing is enabled")
-        if (self.fallback_weight is not None) and not (self.min_weight <= self.fallback_weight <= self.max_weight):
+        if (self.fallback_weight is not None) and not (
+            self.min_weight <= self.fallback_weight <= self.max_weight
+        ):
             raise ValueError("fallback_weight must lie between min_weight and max_weight")
 
     def clamp(self, value: float) -> float:
@@ -92,7 +92,9 @@ def compute_wilder_atr(bars: pd.DataFrame, window: int) -> pd.Series:
     return pd.Series(values, index=true_range.index, name="atr")
 
 
-def _risk_weight(close_price: float, atr_value: float, config: ATRBreakoutConfig, risk: RiskSettings) -> float:
+def _risk_weight(
+    close_price: float, atr_value: float, config: ATRBreakoutConfig, risk: RiskSettings
+) -> float:
     if not risk.enabled:
         return risk.fallback()
     if not np.isfinite(atr_value) or atr_value <= 0:
@@ -113,10 +115,12 @@ def atr_breakout_signals(
     breakout_high = bars["high"].shift(1).rolling(config.breakout_lookback).max()
     breakout_level = breakout_high + atr * config.breakout_multiplier
 
-    records: list[Dict[str, object]] = []
+    records: list[dict[str, object]] = []
     close_series = bars["close"]
 
-    for timestamp, close_price, atr_value, level in zip(bars.index, close_series, atr, breakout_level):
+    for timestamp, close_price, atr_value, level in zip(
+        bars.index, close_series, atr, breakout_level, strict=False
+    ):
         if not np.isfinite(level) or not np.isfinite(close_price):
             action = "flat"
             weight = 0.0

@@ -33,7 +33,9 @@ def render_storage_summary(settings: AppSettings) -> None:
     )
 
 
-def _render_section(title: str, items: list[tuple[str, str | None]], empty_message: str, page: str) -> None:
+def _render_section(
+    title: str, items: list[tuple[str, str | None]], empty_message: str, page: str
+) -> None:
     st.subheader(title)
     if not items:
         st.caption(empty_message)

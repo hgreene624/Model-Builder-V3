@@ -4,6 +4,6 @@ Exposes the core namespaces so downstream callers can rely on concise imports
 such as `import model_builder.profiles` during the migration period.
 """
 
-from . import profiles, optimization, analytics, ui
+from . import analytics, optimization, profiles, ui
 
 __all__ = ["profiles", "optimization", "analytics", "ui"]

@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import copy
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, Dict, List, Sequence
+from typing import Any
 
 import streamlit as st
 
@@ -59,7 +60,7 @@ def _default_profile(portfolio_id: str | None) -> dict[str, Any]:
     }
 
 
-def _format_option(value: str, summaries: Dict[str, dict]) -> str:
+def _format_option(value: str, summaries: dict[str, dict]) -> str:
     if value == "__new__":
         return "➕ Create new profile"
     summary = summaries.get(value)
@@ -94,7 +95,7 @@ def render_profile_editor(
 
     selection_state = st.session_state.get(PROFILE_SELECTION_KEY)
 
-    options: List[str] = ["__new__"] + [summary["profile_id"] for summary in summaries]
+    options: list[str] = ["__new__"] + [summary["profile_id"] for summary in summaries]
     if selection_state in options:
         default_index = options.index(selection_state)
     else:
@@ -140,7 +141,9 @@ def render_profile_editor(
     )
 
     portfolio_ids = [portfolio.portfolio_id for portfolio in portfolios]
-    portfolio_labels = {portfolio.portfolio_id: _portfolio_label(portfolio) for portfolio in portfolios}
+    portfolio_labels = {
+        portfolio.portfolio_id: _portfolio_label(portfolio) for portfolio in portfolios
+    }
     portfolio_index = portfolio_ids.index(selected_portfolio_id)
     selected_portfolio_id = col_a.selectbox(
         "Portfolio",
@@ -222,9 +225,15 @@ def render_profile_editor(
 
     bounds = parameters.get("bounds", {})
     atr_bounds = bounds.get("atr_window", [atr_window - 4, atr_window + 4])
-    lookback_bounds = bounds.get("breakout_lookback", [breakout_lookback - 5, breakout_lookback + 5])
-    multiplier_bounds = bounds.get("breakout_multiplier", [breakout_multiplier - 0.5, breakout_multiplier + 0.5])
-    risk_bounds = bounds.get("risk_fraction", [max(0.001, risk_fraction / 2), min(0.2, risk_fraction * 1.5)])
+    lookback_bounds = bounds.get(
+        "breakout_lookback", [breakout_lookback - 5, breakout_lookback + 5]
+    )
+    multiplier_bounds = bounds.get(
+        "breakout_multiplier", [breakout_multiplier - 0.5, breakout_multiplier + 0.5]
+    )
+    risk_bounds = bounds.get(
+        "risk_fraction", [max(0.001, risk_fraction / 2), min(0.2, risk_fraction * 1.5)]
+    )
 
     col_i, col_j = st.columns(2)
     atr_range = col_i.slider(
@@ -270,6 +279,7 @@ def render_profile_editor(
     )
 
     import os
+
     system_cpu_count = os.cpu_count() or 1
 
     col_m, col_n, col_o = st.columns(3)

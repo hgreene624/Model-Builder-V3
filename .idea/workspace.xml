@@ -4,7 +4,73 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="3a0f8e7c-00d9-4699-9f00-5cef80cd1d44" name="Changes" comment="working graphs" />
+    <list default="true" id="3a0f8e7c-00d9-4699-9f00-5cef80cd1d44" name="Changes" comment="updated param caps for pop, gens, workers">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Home.py" beforeDir="false" afterPath="$PROJECT_DIR$/Home.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pages/1_Portfolio_Curator.py" beforeDir="false" afterPath="$PROJECT_DIR$/pages/1_Portfolio_Curator.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pages/3_Log_Inspector.py" beforeDir="false" afterPath="$PROJECT_DIR$/pages/3_Log_Inspector.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pages/4_Simulation_Review.py" beforeDir="false" afterPath="$PROJECT_DIR$/pages/4_Simulation_Review.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/secrets_original.py" beforeDir="false" afterPath="$PROJECT_DIR$/secrets_original.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/specs/003-the-model-builder/quickstart.md" beforeDir="false" afterPath="$PROJECT_DIR$/specs/003-the-model-builder/quickstart.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/specs/003-the-model-builder/tasks.md" beforeDir="false" afterPath="$PROJECT_DIR$/specs/003-the-model-builder/tasks.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/cli/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/cli/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/cli/optimizer_cli.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/cli/optimizer_cli.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/cli/portfolio_cli.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/cli/portfolio_cli.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/config/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/config/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/cache.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/cache.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/loader.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/loader.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/providers/alpaca_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/providers/alpaca_client.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/providers/yahoo_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/providers/yahoo_client.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/universe_loader.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/universe_loader.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/engine/atr_breakout.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/atr_breakout.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/engine/backtest.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/backtest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/home/dashboard.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/home/dashboard.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model_builder/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model_builder/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model_builder/analytics/heatmap_builder.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model_builder/analytics/heatmap_builder.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model_builder/analytics/trade_timeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model_builder/analytics/trade_timeline.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model_builder/cli/model_builder.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model_builder/cli/model_builder.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model_builder/optimization/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model_builder/optimization/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model_builder/optimization/coverage.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model_builder/optimization/coverage.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model_builder/optimization/runner.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model_builder/optimization/runner.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model_builder/optimization/telemetry.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model_builder/optimization/telemetry.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model_builder/profiles/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model_builder/profiles/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model_builder/profiles/repository.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model_builder/profiles/repository.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model_builder/profiles/service.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model_builder/profiles/service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model_builder/ui/components/candidate_summary.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model_builder/ui/components/candidate_summary.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model_builder/ui/components/live_evaluations.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model_builder/ui/components/live_evaluations.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model_builder/ui/components/profile_editor.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model_builder/ui/components/profile_editor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model_builder/ui/pages/model_builder_page.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model_builder/ui/pages/model_builder_page.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/contracts.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/contracts.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/optimizer/evolutionary.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/optimizer/evolutionary.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/optimizer/telemetry.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/optimizer/telemetry.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/optimizer/workflow.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/optimizer/workflow.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/portfolio/draft.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/portfolio/draft.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/portfolio/filters.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/portfolio/filters.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/portfolio/liquidity.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/portfolio/liquidity.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/portfolio/services.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/portfolio/services.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/test_optimizer_run.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/test_optimizer_run.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/test_portfolio_save.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/test_portfolio_save.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/model_builder/analytics/test_trade_timeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/model_builder/analytics/test_trade_timeline.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/model_builder/cli/test_model_builder_cli.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/model_builder/cli/test_model_builder_cli.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/model_builder/optimization/test_runner.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/model_builder/optimization/test_runner.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/model_builder/profiles/test_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/model_builder/profiles/test_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/model_builder/ui/test_candidate_summary.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/model_builder/ui/test_candidate_summary.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/model_builder/ui/test_live_evaluations_component.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/model_builder/ui/test_live_evaluations_component.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_model_builder_page.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_model_builder_page.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_optimizer_workflow.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_optimizer_workflow.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_artifacts.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/test_artifacts.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_atr_breakout.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/test_atr_breakout.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_backtest.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/test_backtest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_contracts.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/test_contracts.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_loader.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/test_loader.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_portfolio_builder.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/test_portfolio_builder.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_portfolio_cli.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/test_portfolio_cli.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_portfolio_draft.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/test_portfolio_draft.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_portfolio_liquidity.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/test_portfolio_liquidity.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/test_settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_telemetry.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/test_telemetry.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_universe_filters.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/test_universe_filters.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -77,7 +143,7 @@
       <workItem from="1760359549779" duration="2314000" />
       <workItem from="1760361881445" duration="34908000" />
       <workItem from="1760462003973" duration="18095000" />
-      <workItem from="1760717314765" duration="2932000" />
+      <workItem from="1760717314765" duration="4172000" />
     </task>
     <task id="LOCAL-00001" summary="Project Created">
       <option name="closed" value="true" />
@@ -239,7 +305,15 @@
       <option name="project" value="LOCAL" />
       <updated>1760719706672</updated>
     </task>
-    <option name="localTasksCounter" value="21" />
+    <task id="LOCAL-00021" summary="updated param caps for pop, gens, workers">
+      <option name="closed" value="true" />
+      <created>1760720551288</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1760720551288</updated>
+    </task>
+    <option name="localTasksCounter" value="22" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -275,6 +349,7 @@
     <MESSAGE value="model builder dashboard date range toggle" />
     <MESSAGE value="working graphs, need spacing adjustment" />
     <MESSAGE value="working graphs" />
-    <option name="LAST_COMMIT_MESSAGE" value="working graphs" />
+    <MESSAGE value="updated param caps for pop, gens, workers" />
+    <option name="LAST_COMMIT_MESSAGE" value="updated param caps for pop, gens, workers" />
   </component>
 </project>

@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import typer
 
+from src.cli.optimizer_cli import optimizer_app
+from src.cli.portfolio_cli import portfolio_app
 from src.config.settings import AppSettings
 from src.home.dashboard import collect_home_summary
-from src.cli.portfolio_cli import portfolio_app
-from src.cli.optimizer_cli import optimizer_app
 
 app = typer.Typer(help="Model Builder CLI")
 
@@ -17,7 +17,9 @@ def status() -> None:
     typer.echo(f"DATA_DIR: {settings.data_dir}")
     typer.echo(f"Preferred provider: {settings.preferred_provider}")
     typer.echo(
-        "Alpaca credentials: present" if settings.has_alpaca_credentials else "Alpaca credentials: missing"
+        "Alpaca credentials: present"
+        if settings.has_alpaca_credentials
+        else "Alpaca credentials: missing"
     )
     summary = collect_home_summary(settings.data_dir)
     typer.echo(

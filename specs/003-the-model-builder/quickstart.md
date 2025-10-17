@@ -23,10 +23,38 @@
 ## 3. CLI Parity
 - Interact with the same services using Click commands:
   ```bash
-  python -m model_builder.cli.model_builder profiles list
-  python -m model_builder.cli.model_builder profiles save --profile @profiles/sample.json
-  python -m model_builder.cli.model_builder optimize --profile-id <id> --train-percent 0.7
-  python -m model_builder.cli.model_builder evaluations live-tail --run-id <id>
+  # List all strategy profiles
+  python -m model_builder.cli.model_builder profiles list [--output json|table]
+
+  # Create or update a profile from file
+  python -m model_builder.cli.model_builder profiles save --file profiles/sample.json
+
+  # Create or update a profile with inline options
+  python -m model_builder.cli.model_builder profiles save \
+    --name "My Strategy" \
+    --portfolio-id <portfolio_id> \
+    --train-percentage 0.7 \
+    --atr-warmup-days 14 \
+    --parameters '{"population_size": 90, "generations": 30}'
+
+  # Delete a profile
+  python -m model_builder.cli.model_builder profiles delete <profile_id> [--force]
+
+  # Run optimization with a profile
+  python -m model_builder.cli.model_builder optimize \
+    --profile-id <id> \
+    [--train-percent 0.7] \
+    [--warmup-days 14] \
+    [--symbol-count 5] \
+    [--seed 42] \
+    [--use-synthetic] \
+    [--output results.json]
+
+  # Stream live evaluation events
+  python -m model_builder.cli.model_builder evaluations live-tail \
+    --run-id <id> \
+    [--follow] \
+    [--payload-only]
   ```
 - CLI commands read/write the same JSON artifacts under `storage/strategy_profiles/` and `storage/evaluations/`.
 

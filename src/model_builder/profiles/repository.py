@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, List
 
 from model_builder.profiles.models import StrategyProfile
 from src.storage.layout import StorageLayout
@@ -22,9 +22,9 @@ class StrategyProfileRepository:
 
     layout: StorageLayout
 
-    def list_profiles(self) -> List[StrategyProfile]:
+    def list_profiles(self) -> list[StrategyProfile]:
         directory = self.layout.strategy_profiles_directory()
-        profiles: List[StrategyProfile] = []
+        profiles: list[StrategyProfile] = []
         for path in directory.glob("*.json"):
             profile = _load_profile(path)
             profiles.append(profile)

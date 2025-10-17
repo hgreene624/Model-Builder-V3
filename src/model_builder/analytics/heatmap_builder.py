@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import List, Sequence
 
 import numpy as np
 import pandas as pd
@@ -16,9 +16,9 @@ TRADING_DAYS_PER_YEAR = 252
 class MomentumHeatmap:
     """Rolling-return summary used by the best-candidate module."""
 
-    windows: List[int]
-    dates: List[str]
-    matrix: List[List[float | None]]
+    windows: list[int]
+    dates: list[str]
+    matrix: list[list[float | None]]
     narrative: str
     colorscale: str = "RdYlGn"
     zmid: float = 0.0
@@ -28,7 +28,8 @@ class MomentumHeatmap:
             "windows": list(self.windows),
             "dates": list(self.dates),
             "matrix": [
-                [None if value is None or pd.isna(value) else float(value) for value in row] for row in self.matrix
+                [None if value is None or pd.isna(value) else float(value) for value in row]
+                for row in self.matrix
             ],
             "narrative": self.narrative,
             "colorscale": self.colorscale,
@@ -117,7 +118,9 @@ def build_momentum_heatmap(
         window = int(window)
         if window <= 0:
             continue
-        rolling_product = (1 + returns).rolling(window=window, min_periods=window).apply(np.prod, raw=True)
+        rolling_product = (
+            (1 + returns).rolling(window=window, min_periods=window).apply(np.prod, raw=True)
+        )
         if rolling_product.empty:
             continue
         rolling_product = rolling_product.where(rolling_product > 0)
@@ -138,7 +141,7 @@ def build_momentum_heatmap(
 
     windows_order = [int(window) for window in intervals if int(window) in percent_frame.columns]
     dates = [timestamp.isoformat() for timestamp in percent_frame.index]
-    matrix: List[List[float | None]] = []
+    matrix: list[list[float | None]] = []
     for window in windows_order:
         row = percent_frame[window]
         matrix.append([None if pd.isna(value) else float(value) for value in row])
@@ -148,9 +151,7 @@ def build_momentum_heatmap(
     if not latest_frame.empty:
         latest_row = latest_frame.iloc[-1]
         latest_values = {
-            int(window): float(value)
-            for window, value in latest_row.items()
-            if not pd.isna(value)
+            int(window): float(value) for window, value in latest_row.items() if not pd.isna(value)
         }
 
     narrative = _build_narrative(latest_values)

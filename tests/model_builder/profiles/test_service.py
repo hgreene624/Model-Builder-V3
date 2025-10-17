@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Callable
+from collections.abc import Callable
+from datetime import UTC, datetime
 
 import pytest
 
@@ -141,7 +141,7 @@ def test_delete_profile_returns_boolean(tmp_path) -> None:
     service = ProfilesService(
         repository=repository,
         id_factory=lambda: "alpha",
-        clock=_clock_factory(datetime(2025, 1, 1, 0, 0, 0, tzinfo=timezone.utc)),
+        clock=_clock_factory(datetime(2025, 1, 1, 0, 0, 0, tzinfo=UTC)),
     )
 
     service.save_profile(

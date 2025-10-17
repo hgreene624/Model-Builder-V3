@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from time import sleep
-
 import pandas as pd
 
 from src.portfolio.draft import (

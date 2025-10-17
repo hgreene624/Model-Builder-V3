@@ -3,8 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from click.testing import CliRunner
 import pytest
+from click.testing import CliRunner
 
 from model_builder.cli.model_builder import cli
 from model_builder.optimization import EVENT_TYPE_CANDIDATE_EVALUATION, TelemetryLogWriter
@@ -157,10 +157,14 @@ def test_optimize_command_writes_metadata(tmp_path: Path) -> None:
     log_lines = log_path.read_text(encoding="utf-8").strip().splitlines()
     assert log_lines, "telemetry log should contain at least one event"
     envelopes = [json.loads(line) for line in log_lines]
-    run_completed = next((env for env in envelopes if env.get("event_type") == "run_completed"), None)
+    run_completed = next(
+        (env for env in envelopes if env.get("event_type") == "run_completed"), None
+    )
     assert run_completed is not None, "run_completed event missing from telemetry log"
     assert run_completed["payload"]["parameter_path"] == summary["parameter_path"]
-    snapshot = next((env for env in envelopes if env.get("event_type") == "best_candidate_snapshot"), None)
+    snapshot = next(
+        (env for env in envelopes if env.get("event_type") == "best_candidate_snapshot"), None
+    )
     assert snapshot is not None, "best_candidate_snapshot event missing from telemetry log"
     assert snapshot["payload"]["artifacts"] == artifacts
 

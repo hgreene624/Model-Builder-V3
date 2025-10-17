@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from math import sqrt
-from typing import Dict, Iterable, List, Sequence
 
 import numpy as np
 import pandas as pd
@@ -16,7 +16,7 @@ class CostModel:
     slippage_bps: float = 0.0
     borrow_bps: float = 0.0
 
-    def breakdown(self, notional: float, side: str) -> Dict[str, float]:
+    def breakdown(self, notional: float, side: str) -> dict[str, float]:
         absolute = abs(notional)
         commission = self.commission if absolute > 0 else 0.0
         slippage = absolute * (self.slippage_bps / 10_000)
@@ -42,11 +42,15 @@ def _close_prices(prices: pd.DataFrame) -> pd.DataFrame:
     return close.astype(float)
 
 
-def _prepare_weights(signals: pd.DataFrame, index: pd.Index, symbols: Sequence[str]) -> pd.DataFrame:
+def _prepare_weights(
+    signals: pd.DataFrame, index: pd.Index, symbols: Sequence[str]
+) -> pd.DataFrame:
     if signals.empty:
         weights = pd.DataFrame(0.0, index=index, columns=symbols)
     else:
-        pivot = signals.pivot_table(index="timestamp", columns="symbol", values="weight", aggfunc="last")
+        pivot = signals.pivot_table(
+            index="timestamp", columns="symbol", values="weight", aggfunc="last"
+        )
         weights = pivot.reindex(index).sort_index().ffill().fillna(0.0)
         missing_columns = set(symbols) - set(weights.columns)
         for symbol in missing_columns:
@@ -73,17 +77,17 @@ def run_backtest(
     weights = _prepare_weights(signals, close.index, symbols)
     cost_model = cost_model or CostModel()
 
-    positions: Dict[str, float] = {symbol: 0.0 for symbol in symbols}
-    cost_basis: Dict[str, float] = {symbol: 0.0 for symbol in symbols}
-    open_timestamps: Dict[str, pd.Timestamp | None] = {symbol: None for symbol in symbols}
+    positions: dict[str, float] = {symbol: 0.0 for symbol in symbols}
+    cost_basis: dict[str, float] = {symbol: 0.0 for symbol in symbols}
+    open_timestamps: dict[str, pd.Timestamp | None] = {symbol: None for symbol in symbols}
     cash = float(initial_capital)
 
-    equity_points: List[tuple[pd.Timestamp, float]] = []
-    benchmark_points: List[tuple[pd.Timestamp, float]] = []
-    trades: List[TradeRecord] = []
+    equity_points: list[tuple[pd.Timestamp, float]] = []
+    benchmark_points: list[tuple[pd.Timestamp, float]] = []
+    trades: list[TradeRecord] = []
     total_notional = 0.0
-    closing_trades: List[TradeRecord] = []
-    hold_durations: List[float] = []
+    closing_trades: list[TradeRecord] = []
+    hold_durations: list[float] = []
 
     for timestamp in close.index:
         prices_row = close.loc[timestamp]
@@ -202,7 +206,7 @@ def run_backtest(
     average_equity = equity_series.mean()
     turnover = total_notional / average_equity if average_equity > 0 else 0.0
 
-    risk_notes: List[str] = []
+    risk_notes: list[str] = []
     if max_drawdown < -0.2:
         risk_notes.append(f"Max drawdown exceeded 20% ({max_drawdown:.2%}).")
     if turnover > 4.0:

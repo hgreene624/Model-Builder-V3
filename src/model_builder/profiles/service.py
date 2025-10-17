@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import uuid
+from collections.abc import Callable, Mapping, MutableMapping
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Callable, Mapping, MutableMapping
+from typing import Any
 
 from model_builder.profiles.models import StrategyProfile, new_profile_payload
+
 from .repository import StrategyProfileRepository
 
 

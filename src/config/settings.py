@@ -21,7 +21,7 @@ class AppSettings:
         return bool(self.alpaca_key_id and self.alpaca_secret_key)
 
     @classmethod
-    def from_env(cls) -> "AppSettings":
+    def from_env(cls) -> AppSettings:
         data_dir_env = os.getenv("DATA_DIR", "storage")
         data_dir = Path(data_dir_env)
         if not data_dir.is_absolute():
@@ -40,7 +40,9 @@ class AppSettings:
             if secret_dict:
                 secret_key = secret_dict.get("ALPACA_API_KEY") or secret_dict.get("ALPACA_KEY_ID")
                 secret_secret = secret_dict.get("ALPACA_SECRET_KEY")
-                secret_base = secret_dict.get("ALPACA_API_BASE_URL") or secret_dict.get("ALPACA_BASE_URL")
+                secret_base = secret_dict.get("ALPACA_API_BASE_URL") or secret_dict.get(
+                    "ALPACA_BASE_URL"
+                )
         except ModuleNotFoundError:
             pass
 
@@ -51,14 +53,10 @@ class AppSettings:
             or secret_key
         )
         env_secret = (
-            os.getenv("ALPACA_SECRET_KEY")
-            or os.getenv("APCA_API_SECRET_KEY")
-            or secret_secret
+            os.getenv("ALPACA_SECRET_KEY") or os.getenv("APCA_API_SECRET_KEY") or secret_secret
         )
         env_trade = (
-            os.getenv("ALPACA_API_BASE_URL")
-            or os.getenv("APCA_API_BASE_URL")
-            or secret_base
+            os.getenv("ALPACA_API_BASE_URL") or os.getenv("APCA_API_BASE_URL") or secret_base
         )
         env_data = (
             os.getenv("APCA_DATA_API_BASE_URL")

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Any, Dict
+from datetime import UTC, datetime
+from typing import Any
 
 import pytest
 
@@ -17,8 +17,8 @@ def _sample_evaluation(
     score: float,
     score_delta: float,
     *,
-    metrics: Dict[str, float] | None = None,
-    payload: Dict[str, Any] | None = None,
+    metrics: dict[str, float] | None = None,
+    payload: dict[str, Any] | None = None,
     timestamp: str | None = None,
 ) -> dict[str, Any]:
     return {
@@ -27,7 +27,7 @@ def _sample_evaluation(
         "score_delta": score_delta,
         "metrics": metrics or {"cagr": 0.12},
         "timestamp": timestamp
-        or datetime(2025, 1, 1, tzinfo=timezone.utc).isoformat(timespec="milliseconds"),
+        or datetime(2025, 1, 1, tzinfo=UTC).isoformat(timespec="milliseconds"),
         "parameter_payload": payload or {"atr_window": 14},
     }
 

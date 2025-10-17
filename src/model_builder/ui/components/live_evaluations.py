@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass, field
-from typing import Any, Mapping, MutableMapping, Sequence, Tuple
+from typing import Any
 
 LIVE_EVALUATIONS_STATE_KEY = "model_builder_live_evaluations"
-_COLUMNS: Tuple[str, ...] = (
+_COLUMNS: tuple[str, ...] = (
     "candidate_id",
     "score",
     "score_delta",
@@ -40,7 +41,7 @@ class LiveEvaluationsState:
     _event_keys: set[tuple[str, str, float]] = field(default_factory=set)
 
     @property
-    def columns(self) -> Tuple[str, ...]:
+    def columns(self) -> tuple[str, ...]:
         return _COLUMNS
 
     @property
@@ -48,7 +49,7 @@ class LiveEvaluationsState:
         return self._run_id
 
     @property
-    def rows(self) -> Tuple[dict[str, Any], ...]:
+    def rows(self) -> tuple[dict[str, Any], ...]:
         return tuple(self._rows)
 
     def ingest(self, run_id: str, evaluation: Mapping[str, Any]) -> dict[str, Any]:

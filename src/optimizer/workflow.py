@@ -2,26 +2,15 @@ from __future__ import annotations
 
 import json
 import uuid
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta, timezone
-from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
-
+from datetime import UTC, date, datetime, timedelta
 from functools import partial
+from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
-
-from src.config.settings import AppSettings
-from src.data.cache import MarketDataCache
-from src.data.loader import MarketDataLoader
-from src.engine.atr_breakout import ATRBreakoutConfig, RiskSettings, atr_breakout_signals
-from src.engine.backtest import CostModel, run_backtest
-from src.models.contracts import ParameterSet, Portfolio, TradeRecord
-from src.optimizer.evolutionary import ConstraintGate, ObjectiveWeights, EvolutionaryOptimizer
-from src.optimizer.telemetry import TelemetryPublisher
-from src.optimizer.training_logger import TrainingLogger
-from src.storage.layout import StorageLayout
 
 from model_builder.analytics import build_momentum_heatmap, build_trade_timeline
 from model_builder.optimization import (
@@ -30,11 +19,21 @@ from model_builder.optimization import (
     TelemetryLogWriter,
 )
 from model_builder.optimization.coverage import CoveragePlan, derive_plan
+from src.config.settings import AppSettings
+from src.data.cache import MarketDataCache
+from src.data.loader import MarketDataLoader
+from src.engine.atr_breakout import ATRBreakoutConfig, RiskSettings, atr_breakout_signals
+from src.engine.backtest import CostModel, run_backtest
+from src.models.contracts import ParameterSet, Portfolio, TradeRecord
+from src.optimizer.evolutionary import ConstraintGate, EvolutionaryOptimizer, ObjectiveWeights
+from src.optimizer.telemetry import TelemetryPublisher
+from src.optimizer.training_logger import TrainingLogger
+from src.storage.layout import StorageLayout
 
 
 @dataclass(frozen=True)
 class OptimizationContext:
-    bars_by_symbol: Dict[str, pd.DataFrame]
+    bars_by_symbol: dict[str, pd.DataFrame]
     price_matrix: pd.DataFrame
     base_config: ATRBreakoutConfig
     base_risk: RiskSettings
@@ -45,14 +44,14 @@ class OptimizationContext:
 @dataclass(frozen=True)
 class OptimizationResult:
     parameter_set: ParameterSet
-    telemetry: List[dict]
-    candidate_history: List[dict]
+    telemetry: list[dict]
+    candidate_history: list[dict]
     best_candidate_id: str | None
-    metrics: Dict[str, float]
-    stats: Dict[str, float]
+    metrics: dict[str, float]
+    stats: dict[str, float]
     equity_curve: pd.DataFrame
-    trades: List[TradeRecord]
-    issues: List[str]
+    trades: list[TradeRecord]
+    issues: list[str]
     synthetic: bool
     run_id: str
     log_path: Path
@@ -61,7 +60,7 @@ class OptimizationResult:
     best_config: ATRBreakoutConfig
     best_risk: RiskSettings
     coverage_plan: CoveragePlan
-    artifact_paths: Dict[str, str] = field(default_factory=dict)
+    artifact_paths: dict[str, str] = field(default_factory=dict)
 
 
 def build_loader(settings: AppSettings) -> MarketDataLoader | None:
@@ -81,11 +80,13 @@ def build_loader(settings: AppSettings) -> MarketDataLoader | None:
     return MarketDataLoader(cache=cache, providers=providers, default_provider=default)
 
 
-def generate_synthetic_frames(symbols: Iterable[str], periods: int = 365) -> Dict[str, pd.DataFrame]:
+def generate_synthetic_frames(
+    symbols: Iterable[str], periods: int = 365
+) -> dict[str, pd.DataFrame]:
     """Produce deterministic synthetic OHLCV frames for offline optimisation."""
-    end = datetime.now(tz=timezone.utc).date()
+    end = datetime.now(tz=UTC).date()
     index = pd.date_range(end=end, periods=periods, freq="D", tz="UTC")
-    frames: Dict[str, pd.DataFrame] = {}
+    frames: dict[str, pd.DataFrame] = {}
     for offset, symbol in enumerate(symbols, start=1):
         rng = np.random.default_rng(seed=offset)
         base = rng.uniform(80, 120)
@@ -138,7 +139,9 @@ def _normalize_equity_curve(frame: pd.DataFrame) -> pd.DataFrame:
     return normalized.sort_values("timestamp").reset_index(drop=True)
 
 
-def _split_equity_segments(frame: pd.DataFrame, *, plan: CoveragePlan) -> tuple[pd.DataFrame, pd.DataFrame]:
+def _split_equity_segments(
+    frame: pd.DataFrame, *, plan: CoveragePlan
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     if frame.empty:
         return frame.copy(), frame.copy()
 
@@ -178,7 +181,7 @@ def _persist_best_candidate_snapshot(
     trades: Sequence[TradeRecord],
     candidate_history: Sequence[Mapping[str, Any]],
     best_candidate_id: str | None,
-) -> Tuple[Dict[str, str], dict | None]:
+) -> tuple[dict[str, str], dict | None]:
     best_entry = _best_candidate_entry(candidate_history, best_candidate_id)
     if best_entry is None:
         return {}, None
@@ -206,8 +209,8 @@ def _persist_best_candidate_snapshot(
     equity_path = layout.evaluation_artifact_path(run_id, "holdout_equity", ".csv")
     export_holdout = holdout_curve.copy()
     if not export_holdout.empty:
-        export_holdout["timestamp"] = export_holdout["timestamp"].dt.tz_convert("UTC").dt.strftime(
-            "%Y-%m-%dT%H:%M:%S.%fZ"
+        export_holdout["timestamp"] = (
+            export_holdout["timestamp"].dt.tz_convert("UTC").dt.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
         )
     export_holdout.to_csv(equity_path, index=False)
 
@@ -224,8 +227,7 @@ def _persist_best_candidate_snapshot(
     }
 
     metrics_payload = {
-        str(key): float(value)
-        for key, value in dict(best_entry.get("metrics") or {}).items()
+        str(key): float(value) for key, value in dict(best_entry.get("metrics") or {}).items()
     }
     parameter_payload = dict(best_entry.get("parameter_payload") or {})
 
@@ -264,12 +266,12 @@ def _persist_best_candidate_snapshot(
     return artifacts, envelope
 
 
-def resolve_coverage_window(portfolio: Portfolio) -> Tuple[str, str]:
+def resolve_coverage_window(portfolio: Portfolio) -> tuple[str, str]:
     coverage = portfolio.coverage_window or {}
     end = coverage.get("end")
     start = coverage.get("start")
     if not end:
-        end = datetime.now(tz=timezone.utc).date().isoformat()
+        end = datetime.now(tz=UTC).date().isoformat()
     if not start:
         start_dt = datetime.fromisoformat(end).date() - timedelta(days=365 * 5)
         start = start_dt.isoformat()
@@ -286,9 +288,9 @@ def load_portfolio_bars(
     *,
     use_synthetic: bool = False,
     synthetic_periods: int = 365,
-) -> tuple[Dict[str, pd.DataFrame], List[str], bool]:
-    frames: Dict[str, pd.DataFrame] = {}
-    issues: List[str] = []
+) -> tuple[dict[str, pd.DataFrame], list[str], bool]:
+    frames: dict[str, pd.DataFrame] = {}
+    issues: list[str] = []
     synthetic_used = False
 
     if use_synthetic or loader is None:
@@ -314,23 +316,23 @@ def load_portfolio_bars(
     missing = [symbol for symbol in symbols if symbol not in frames]
     if missing:
         synthetic_used = True
-        issues.append(f"Synthetic data generated for symbols with missing history: {', '.join(missing)}.")
+        issues.append(
+            f"Synthetic data generated for symbols with missing history: {', '.join(missing)}."
+        )
         frames.update(generate_synthetic_frames(missing, periods=synthetic_periods))
 
     return frames, issues, synthetic_used
 
 
-def build_price_matrix(bars_by_symbol: Dict[str, pd.DataFrame]) -> pd.DataFrame:
-    close_frames = [
-        frame["close"].rename(symbol) for symbol, frame in bars_by_symbol.items()
-    ]
+def build_price_matrix(bars_by_symbol: dict[str, pd.DataFrame]) -> pd.DataFrame:
+    close_frames = [frame["close"].rename(symbol) for symbol, frame in bars_by_symbol.items()]
     if not close_frames:
         return pd.DataFrame()
     matrix = pd.concat(close_frames, axis=1).sort_index()
     return matrix.ffill().dropna(how="all")
 
 
-def config_from_genome(genome: Dict[str, float], base: ATRBreakoutConfig) -> ATRBreakoutConfig:
+def config_from_genome(genome: dict[str, float], base: ATRBreakoutConfig) -> ATRBreakoutConfig:
     window = max(1, int(round(genome.get("atr_window", base.atr_window))))
     lookback = max(1, int(round(genome.get("breakout_lookback", base.breakout_lookback))))
     multiplier = float(genome.get("breakout_multiplier", base.breakout_multiplier))
@@ -341,7 +343,7 @@ def config_from_genome(genome: Dict[str, float], base: ATRBreakoutConfig) -> ATR
     )
 
 
-def risk_from_genome(genome: Dict[str, float], template: RiskSettings) -> RiskSettings:
+def risk_from_genome(genome: dict[str, float], template: RiskSettings) -> RiskSettings:
     fraction = max(1e-6, float(genome.get("risk_fraction", template.risk_fraction)))
     return RiskSettings(
         enabled=template.enabled,
@@ -353,7 +355,7 @@ def risk_from_genome(genome: Dict[str, float], template: RiskSettings) -> RiskSe
 
 
 def _build_signals_for_config(
-    bars_by_symbol: Dict[str, pd.DataFrame],
+    bars_by_symbol: dict[str, pd.DataFrame],
     config: ATRBreakoutConfig,
     risk: RiskSettings,
 ) -> pd.DataFrame:
@@ -370,7 +372,7 @@ def _evaluate_config(
     *,
     config: ATRBreakoutConfig,
     risk: RiskSettings,
-    bars_by_symbol: Dict[str, pd.DataFrame],
+    bars_by_symbol: dict[str, pd.DataFrame],
     price_matrix: pd.DataFrame,
     initial_capital: float,
     cost_model: CostModel,
@@ -384,7 +386,9 @@ def _evaluate_config(
     )
 
 
-def evaluate_genome(genome: Dict[str, float], context: OptimizationContext) -> Dict[str, Dict[str, float]]:
+def evaluate_genome(
+    genome: dict[str, float], context: OptimizationContext
+) -> dict[str, dict[str, float]]:
     config = config_from_genome(genome, context.base_config)
     risk = risk_from_genome(genome, context.base_risk)
     backtest = _evaluate_config(
@@ -404,9 +408,9 @@ def evaluate_genome(genome: Dict[str, float], context: OptimizationContext) -> D
 
 
 def backtest_best(
-    genome: Dict[str, float],
+    genome: dict[str, float],
     context: OptimizationContext,
-) -> Tuple[ATRBreakoutConfig, RiskSettings, pd.DataFrame, Dict[str, float], Dict[str, float]]:
+) -> tuple[ATRBreakoutConfig, RiskSettings, pd.DataFrame, dict[str, float], dict[str, float]]:
     config = config_from_genome(genome, context.base_config)
     risk = risk_from_genome(genome, context.base_risk)
     backtest = _evaluate_config(
@@ -431,18 +435,18 @@ def backtest_best(
 
 
 def generate_population(
-    base: Dict[str, float],
-    bounds: Dict[str, Tuple[float, float]],
+    base: dict[str, float],
+    bounds: dict[str, tuple[float, float]],
     size: int,
-    seed: Optional[int],
+    seed: int | None,
     int_fields: Iterable[str],
-) -> List[Dict[str, float]]:
+) -> list[dict[str, float]]:
     generator = np.random.default_rng(seed or 0)
-    population: List[Dict[str, float]] = [dict(base)]
+    population: list[dict[str, float]] = [dict(base)]
     int_field_set = set(int_fields)
 
     while len(population) < size:
-        genome: Dict[str, float] = {}
+        genome: dict[str, float] = {}
         for key, (low, high) in bounds.items():
             if key in int_field_set:
                 value = generator.integers(int(low), int(high) + 1)
@@ -455,12 +459,12 @@ def generate_population(
 
 
 def build_mutate_fn(
-    bounds: Dict[str, Tuple[float, float]],
+    bounds: dict[str, tuple[float, float]],
     int_fields: Iterable[str],
 ) -> callable:
     int_field_set = set(int_fields)
 
-    def mutate(genome: Dict[str, float], rng: np.random.Generator) -> Dict[str, float]:
+    def mutate(genome: dict[str, float], rng: np.random.Generator) -> dict[str, float]:
         mutated = dict(genome)
         for key, (low, high) in bounds.items():
             span = high - low
@@ -475,8 +479,10 @@ def build_mutate_fn(
                 mutated[key] = float(candidate)
         return mutated
 
-    def mutate_wrapper(genome: Dict[str, float], random_state) -> Dict[str, float]:
-        if isinstance(random_state, np.random.RandomState):  # pragma: no cover - compatibility branch
+    def mutate_wrapper(genome: dict[str, float], random_state) -> dict[str, float]:
+        if isinstance(
+            random_state, np.random.RandomState
+        ):  # pragma: no cover - compatibility branch
             generator = np.random.default_rng(random_state.randint(0, 1_000_000))
         else:
             generator = random_state
@@ -492,21 +498,21 @@ def run_optimization(
     selected_symbols: Sequence[str],
     base_config: ATRBreakoutConfig,
     base_risk: RiskSettings,
-    bounds: Dict[str, Tuple[float, float]],
+    bounds: dict[str, tuple[float, float]],
     objective_weights: ObjectiveWeights,
     constraint_gate: ConstraintGate,
     population_size: int,
     generations: int,
     max_workers: int,
-    seed: Optional[int],
+    seed: int | None,
     initial_capital: float,
     cost_model: CostModel,
     model_id: str,
     session: str,
-    run_id: Optional[str] = None,
+    run_id: str | None = None,
     use_synthetic: bool = False,
     train_percentage: float | None = None,
-    warmup_days: Optional[int] = None,
+    warmup_days: int | None = None,
 ) -> OptimizationResult:
     if not selected_symbols:
         raise ValueError("Selected symbol list is empty; provide at least one ticker.")
@@ -549,7 +555,7 @@ def run_optimization(
     train_end = coverage_plan.train.end
     holdout_end = coverage_plan.holdout.end
 
-    full_bars_by_symbol: Dict[str, pd.DataFrame] = {}
+    full_bars_by_symbol: dict[str, pd.DataFrame] = {}
     for symbol, frame in bars_by_symbol.items():
         trimmed = _filter_frame_by_dates(frame, start=warmup_start, end=holdout_end)
         if trimmed.empty:
@@ -563,7 +569,7 @@ def run_optimization(
     if full_price_matrix.empty:
         raise ValueError("Coverage price data unavailable after applying coverage plan.")
 
-    training_bars_by_symbol: Dict[str, pd.DataFrame] = {}
+    training_bars_by_symbol: dict[str, pd.DataFrame] = {}
     for symbol, frame in full_bars_by_symbol.items():
         training_slice = _filter_frame_by_dates(frame, start=warmup_start, end=train_end)
         if training_slice.empty:
@@ -573,7 +579,9 @@ def run_optimization(
             )
         training_bars_by_symbol[symbol] = training_slice
 
-    training_price_matrix = _filter_frame_by_dates(full_price_matrix, start=warmup_start, end=train_end)
+    training_price_matrix = _filter_frame_by_dates(
+        full_price_matrix, start=warmup_start, end=train_end
+    )
     if training_price_matrix.empty:
         raise ValueError("Training price data unavailable after applying coverage plan.")
 
@@ -605,7 +613,7 @@ def run_optimization(
 
     actual_run_id = run_id or uuid.uuid4().hex
 
-    telemetry_events: List[dict] = []
+    telemetry_events: list[dict] = []
     publisher = TelemetryPublisher(
         run_id=actual_run_id,
         logger=TrainingLogger(layout.run_log_path(actual_run_id)),
@@ -616,7 +624,7 @@ def run_optimization(
     telemetry_writer = TelemetryLogWriter(run_id=actual_run_id, layout=layout, session=session)
     evaluation_appender = EvaluationAppender(writer=telemetry_writer)
 
-    def _record_candidate(event: Dict[str, object]) -> None:
+    def _record_candidate(event: dict[str, object]) -> None:
         metadata = {
             "generation": event.get("generation"),
             "rank": event.get("rank"),

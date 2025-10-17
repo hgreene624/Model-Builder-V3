@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import timedelta
-from typing import Callable, Dict, List, Optional
 
 import pandas as pd
 
@@ -27,7 +27,7 @@ class SymbolDiagnostics:
     final_provider: str | None = None
     rows_returned: int | None = None
     exception_message: str | None = None
-    attempts: List[FetchAttempt] = field(default_factory=list)
+    attempts: list[FetchAttempt] = field(default_factory=list)
     shard_path: str | None = None
 
     def to_summary(self) -> dict[str, object]:
@@ -46,7 +46,7 @@ class MarketDataLoader:
     def __init__(
         self,
         cache: MarketDataCache,
-        providers: Dict[str, Callable[[], Callable[[str, str, str, str], pd.DataFrame]]],
+        providers: dict[str, Callable[[], Callable[[str, str, str, str], pd.DataFrame]]],
         default_provider: str = "alpaca",
     ) -> None:
         self.cache = cache
@@ -104,7 +104,7 @@ class MarketDataLoader:
         interval: str = "1d",
         warmup_bars: int = 0,
         provider: str | None = None,
-    ) -> tuple[pd.DataFrame, SymbolDiagnostics, Optional[Exception]]:
+    ) -> tuple[pd.DataFrame, SymbolDiagnostics, Exception | None]:
         provider_name = provider or self.default_provider
         warmup_start = self._apply_warmup(start, warmup_bars, interval)
         frame, diagnostics, error = self._load_internal(
@@ -128,7 +128,7 @@ class MarketDataLoader:
         warmup_start: str,
         provider_name: str,
         suppress_errors: bool = False,
-    ) -> tuple[pd.DataFrame, SymbolDiagnostics, Optional[Exception]]:
+    ) -> tuple[pd.DataFrame, SymbolDiagnostics, Exception | None]:
         diagnostics = SymbolDiagnostics(
             symbol=symbol,
             start=start,
@@ -157,7 +157,9 @@ class MarketDataLoader:
                 diagnostics.cache_hit = "disk"
                 diagnostics.final_provider = "disk"
                 diagnostics.rows_returned = int(subset.shape[0])
-                diagnostics.shard_path = str(self.cache._shard_file(symbol, interval, warmup_start, end))  # type: ignore[attr-defined]
+                diagnostics.shard_path = str(
+                    self.cache._shard_file(symbol, interval, warmup_start, end)
+                )  # type: ignore[attr-defined]
                 return subset, diagnostics, None
             diagnostics.cache_hit = "disk-empty"
             self.cache.delete_disk(symbol, interval, warmup_start, end)
@@ -171,17 +173,23 @@ class MarketDataLoader:
             diagnostics.attempts.append(FetchAttempt(provider=active_provider, success=True))
             diagnostics.final_provider = active_provider
         except Exception as exc:
-            diagnostics.attempts.append(FetchAttempt(provider=active_provider, success=False, error=str(exc)))
+            diagnostics.attempts.append(
+                FetchAttempt(provider=active_provider, success=False, error=str(exc))
+            )
             if active_provider != "yahoo" and "yahoo" in self.providers:
                 active_provider = "yahoo"
                 fetcher = self._resolve_provider(active_provider)
                 try:
                     frame = fetcher(symbol, warmup_start, end, interval)
-                    diagnostics.attempts.append(FetchAttempt(provider=active_provider, success=True))
+                    diagnostics.attempts.append(
+                        FetchAttempt(provider=active_provider, success=True)
+                    )
                     diagnostics.final_provider = active_provider
                 except Exception as fallback_exc:
                     diagnostics.attempts.append(
-                        FetchAttempt(provider=active_provider, success=False, error=str(fallback_exc))
+                        FetchAttempt(
+                            provider=active_provider, success=False, error=str(fallback_exc)
+                        )
                     )
                     diagnostics.exception_message = str(fallback_exc)
                     error = fallback_exc

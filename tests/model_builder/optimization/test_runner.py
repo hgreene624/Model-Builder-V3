@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -30,9 +30,9 @@ def test_append_streams_to_log_and_tracks_best(tmp_path: Path) -> None:
     writer = TelemetryLogWriter(run_id="run-abc", layout=layout, session="ui")
     clock, remaining = _clock_factory(
         [
-            datetime(2025, 1, 1, 12, 0, tzinfo=timezone.utc),
-            datetime(2025, 1, 1, 12, 1, tzinfo=timezone.utc),
-            datetime(2025, 1, 1, 12, 2, tzinfo=timezone.utc),
+            datetime(2025, 1, 1, 12, 0, tzinfo=UTC),
+            datetime(2025, 1, 1, 12, 1, tzinfo=UTC),
+            datetime(2025, 1, 1, 12, 2, tzinfo=UTC),
         ]
     )
     appender = EvaluationAppender(writer=writer, clock=clock)
@@ -94,7 +94,7 @@ def test_append_streams_to_log_and_tracks_best(tmp_path: Path) -> None:
 def test_append_rejects_blank_candidate_id(tmp_path: Path) -> None:
     layout = StorageLayout(root=tmp_path)
     writer = TelemetryLogWriter(run_id="run-xyz", layout=layout)
-    appender = EvaluationAppender(writer=writer, clock=lambda: datetime.now(tz=timezone.utc))
+    appender = EvaluationAppender(writer=writer, clock=lambda: datetime.now(tz=UTC))
 
     with pytest.raises(ValueError):
         appender.append(

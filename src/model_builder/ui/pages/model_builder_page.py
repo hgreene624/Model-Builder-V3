@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Dict, Callable
+from typing import Any
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -15,7 +16,7 @@ from model_builder.ui.components import (
     render_best_candidate,
     store_best_candidate,
 )
-from model_builder.ui.components.profile_editor import ProfileEditorResult, render_profile_editor
+from model_builder.ui.components.profile_editor import render_profile_editor
 from src.config.settings import AppSettings
 from src.engine.atr_breakout import ATRBreakoutConfig, RiskSettings
 from src.engine.backtest import CostModel
@@ -162,7 +163,9 @@ def _coverage_table(result: OptimizationResult) -> pd.DataFrame:
             "Slice": "Warmup",
             "Start": warmup_slice.start.isoformat(),
             "End": warmup_slice.end.isoformat(),
-            "Notes": f"Deficit {plan.warmup.deficit_days} day(s)" if plan.warmup.deficit_days else "",
+            "Notes": f"Deficit {plan.warmup.deficit_days} day(s)"
+            if plan.warmup.deficit_days
+            else "",
         },
     ]
     return pd.DataFrame(rows)
@@ -268,7 +271,9 @@ def _render_equity_curve(result: OptimizationResult) -> None:
             )
         )
     elif split.expected_holdout_points > 0:
-        holdout_warning = "Holdout equity curve returned only missing values; nothing to plot in orange."
+        holdout_warning = (
+            "Holdout equity curve returned only missing values; nothing to plot in orange."
+        )
 
     fig.update_xaxes(
         tickformat="%b %Y",
@@ -337,7 +342,9 @@ def _render_equity_curve(result: OptimizationResult) -> None:
 
 
 def _display_result(result: OptimizationResult) -> None:
-    st.success(f"Run {result.run_id} completed. Parameter set `{result.parameter_set.parameter_set_id}` saved.")
+    st.success(
+        f"Run {result.run_id} completed. Parameter set `{result.parameter_set.parameter_set_id}` saved."
+    )
 
     col_a, col_b = st.columns(2)
     with col_a:
@@ -380,7 +387,7 @@ def _display_result(result: OptimizationResult) -> None:
         render_best_candidate(best_candidate)
 
 
-def _build_objective(parameters: Dict[str, Any]) -> ObjectiveWeights:
+def _build_objective(parameters: dict[str, Any]) -> ObjectiveWeights:
     objective = parameters.get("objective_weights", {})
     return ObjectiveWeights(
         cagr=float(objective.get("cagr", 0.5)),
@@ -389,24 +396,82 @@ def _build_objective(parameters: Dict[str, Any]) -> ObjectiveWeights:
     )
 
 
-def _build_bounds(parameters: Dict[str, Any]) -> Dict[str, tuple[float, float]]:
+def _build_bounds(parameters: dict[str, Any]) -> dict[str, tuple[float, float]]:
     bounds = parameters.get("bounds", {})
     return {
         "atr_window": (
-            float(bounds.get("atr_window", [parameters.get("atr_window", 14) - 4, parameters.get("atr_window", 14) + 4])[0]),
-            float(bounds.get("atr_window", [parameters.get("atr_window", 14) - 4, parameters.get("atr_window", 14) + 4])[1]),
+            float(
+                bounds.get(
+                    "atr_window",
+                    [parameters.get("atr_window", 14) - 4, parameters.get("atr_window", 14) + 4],
+                )[0]
+            ),
+            float(
+                bounds.get(
+                    "atr_window",
+                    [parameters.get("atr_window", 14) - 4, parameters.get("atr_window", 14) + 4],
+                )[1]
+            ),
         ),
         "breakout_lookback": (
-            float(bounds.get("breakout_lookback", [parameters.get("breakout_lookback", 20) - 5, parameters.get("breakout_lookback", 20) + 5])[0]),
-            float(bounds.get("breakout_lookback", [parameters.get("breakout_lookback", 20) - 5, parameters.get("breakout_lookback", 20) + 5])[1]),
+            float(
+                bounds.get(
+                    "breakout_lookback",
+                    [
+                        parameters.get("breakout_lookback", 20) - 5,
+                        parameters.get("breakout_lookback", 20) + 5,
+                    ],
+                )[0]
+            ),
+            float(
+                bounds.get(
+                    "breakout_lookback",
+                    [
+                        parameters.get("breakout_lookback", 20) - 5,
+                        parameters.get("breakout_lookback", 20) + 5,
+                    ],
+                )[1]
+            ),
         ),
         "breakout_multiplier": (
-            float(bounds.get("breakout_multiplier", [parameters.get("breakout_multiplier", 2.0) - 0.5, parameters.get("breakout_multiplier", 2.0) + 0.5])[0]),
-            float(bounds.get("breakout_multiplier", [parameters.get("breakout_multiplier", 2.0) - 0.5, parameters.get("breakout_multiplier", 2.0) + 0.5])[1]),
+            float(
+                bounds.get(
+                    "breakout_multiplier",
+                    [
+                        parameters.get("breakout_multiplier", 2.0) - 0.5,
+                        parameters.get("breakout_multiplier", 2.0) + 0.5,
+                    ],
+                )[0]
+            ),
+            float(
+                bounds.get(
+                    "breakout_multiplier",
+                    [
+                        parameters.get("breakout_multiplier", 2.0) - 0.5,
+                        parameters.get("breakout_multiplier", 2.0) + 0.5,
+                    ],
+                )[1]
+            ),
         ),
         "risk_fraction": (
-            float(bounds.get("risk_fraction", [parameters.get("risk_fraction", 0.02) / 2, parameters.get("risk_fraction", 0.02) * 1.5])[0]),
-            float(bounds.get("risk_fraction", [parameters.get("risk_fraction", 0.02) / 2, parameters.get("risk_fraction", 0.02) * 1.5])[1]),
+            float(
+                bounds.get(
+                    "risk_fraction",
+                    [
+                        parameters.get("risk_fraction", 0.02) / 2,
+                        parameters.get("risk_fraction", 0.02) * 1.5,
+                    ],
+                )[0]
+            ),
+            float(
+                bounds.get(
+                    "risk_fraction",
+                    [
+                        parameters.get("risk_fraction", 0.02) / 2,
+                        parameters.get("risk_fraction", 0.02) * 1.5,
+                    ],
+                )[1]
+            ),
         ),
     }
 
@@ -452,13 +517,17 @@ def run_page() -> None:
 
     portfolio = _resolve_profile_portfolio(store, profile)
     if portfolio is None:
-        st.error("Associated portfolio could not be found. Update the profile to reference a valid portfolio.")
+        st.error(
+            "Associated portfolio could not be found. Update the profile to reference a valid portfolio."
+        )
         st.stop()
 
     parameters = dict(profile.get("parameters") or {})
     selected_symbols = _select_symbols(portfolio, int(parameters.get("symbol_count", 5)))
     if not selected_symbols:
-        st.error("Selected portfolio has no tickers. Adjust the portfolio before running the optimizer.")
+        st.error(
+            "Selected portfolio has no tickers. Adjust the portfolio before running the optimizer."
+        )
         st.stop()
 
     st.divider()

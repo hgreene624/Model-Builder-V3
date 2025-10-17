@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable, Iterable, Mapping, MutableSequence
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Callable, Iterable, Mapping, MutableSequence
 
 from src.storage.layout import StorageLayout
 
@@ -16,7 +16,7 @@ EVENT_TYPE_BEST_CANDIDATE_SNAPSHOT = "best_candidate_snapshot"
 
 
 def _utc_now() -> str:
-    return datetime.now(tz=timezone.utc).isoformat(timespec="milliseconds")
+    return datetime.now(tz=UTC).isoformat(timespec="milliseconds")
 
 
 def _ensure_mapping(name: str, payload: Mapping[str, object]) -> dict:

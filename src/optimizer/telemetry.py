@@ -1,17 +1,16 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from typing import Callable, Dict, List, Optional
+from datetime import UTC, datetime
 
 from src.optimizer.training_logger import TrainingLogger
-
 
 Listener = Callable[[dict], None]
 
 
 def _utc_now() -> str:
-    return datetime.now(tz=timezone.utc).isoformat(timespec="milliseconds")
+    return datetime.now(tz=UTC).isoformat(timespec="milliseconds")
 
 
 @dataclass
@@ -22,12 +21,12 @@ class TelemetryPublisher:
     schema_version: str = "1.0.0"
 
     def __post_init__(self) -> None:
-        self._listeners: List[Listener] = []
+        self._listeners: list[Listener] = []
 
     def register(self, listener: Listener) -> None:
         self._listeners.append(listener)
 
-    def emit(self, event_type: str, payload: Dict[str, object]) -> dict:
+    def emit(self, event_type: str, payload: dict[str, object]) -> dict:
         event = {
             "schema_version": self.schema_version,
             "timestamp": _utc_now(),
@@ -47,10 +46,10 @@ class TelemetryPublisher:
         *,
         model_id: str,
         portfolio_id: str,
-        objective_weights: Dict[str, float],
+        objective_weights: dict[str, float],
         population_size: int,
         generations: int,
-        seed: Optional[int],
+        seed: int | None,
     ) -> dict:
         return self.emit(
             "session_start",
@@ -72,9 +71,9 @@ class TelemetryPublisher:
         infeasible: int,
         best_fitness: float,
         average_fitness: float,
-        best_parameters: Dict[str, float],
-        best_metrics: Dict[str, float],
-        best_constraints: Dict[str, float],
+        best_parameters: dict[str, float],
+        best_metrics: dict[str, float],
+        best_constraints: dict[str, float],
     ) -> dict:
         return self.emit(
             "generation_summary",
@@ -90,7 +89,7 @@ class TelemetryPublisher:
             },
         )
 
-    def checkpoint(self, payload: Dict[str, object]) -> dict:
+    def checkpoint(self, payload: dict[str, object]) -> dict:
         return self.emit("checkpoint", payload)
 
     def session_end(

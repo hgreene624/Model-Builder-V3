@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable, List, Sequence, Tuple
+from typing import Any
 
 
 class UniverseNotFoundError(FileNotFoundError):
@@ -50,14 +51,14 @@ class IndexUniverse:
     name: str
     as_of: str | None
     metadata: dict[str, Any]
-    symbols: Tuple[UniverseSymbol, ...]
+    symbols: tuple[UniverseSymbol, ...]
     source_path: Path
 
     @property
-    def tickers(self) -> List[str]:
+    def tickers(self) -> list[str]:
         return [symbol.ticker for symbol in self.symbols]
 
-    def to_records(self) -> List[dict[str, Any]]:
+    def to_records(self) -> list[dict[str, Any]]:
         return [symbol.as_dict() for symbol in self.symbols]
 
 
@@ -68,15 +69,15 @@ class UniverseSummary:
     as_of: str | None
     symbol_count: int
     source_path: Path
-    aliases: Tuple[str, ...]
+    aliases: tuple[str, ...]
 
 
-def list_universes(directory: Path | None = None) -> List[UniverseSummary]:
+def list_universes(directory: Path | None = None) -> list[UniverseSummary]:
     base_dir = directory or DEFAULT_UNIVERSE_DIR
     if not base_dir.exists():
         return []
 
-    summaries: List[UniverseSummary] = []
+    summaries: list[UniverseSummary] = []
     for path in sorted(base_dir.glob("*.json")):
         with path.open() as handle:
             payload = json.load(handle)
@@ -142,8 +143,8 @@ def _ensure_unique_tickers(symbols: Sequence[UniverseSymbol]) -> None:
         seen.add(ticker)
 
 
-def _coerce_symbols(raw_symbols: Iterable[dict[str, Any]]) -> Tuple[UniverseSymbol, ...]:
-    parsed: List[UniverseSymbol] = []
+def _coerce_symbols(raw_symbols: Iterable[dict[str, Any]]) -> tuple[UniverseSymbol, ...]:
+    parsed: list[UniverseSymbol] = []
     for entry in raw_symbols:
         ticker_raw = entry.get("ticker") or entry.get("symbol")
         if not ticker_raw:

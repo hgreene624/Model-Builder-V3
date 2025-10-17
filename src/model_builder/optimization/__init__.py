@@ -1,9 +1,9 @@
 """Optimization utilities for Model Builder."""
 
 from .runner import (
+    EVENT_TYPE_CANDIDATE_EVALUATION,
     CandidateEvaluation,
     CandidateListener,
-    EVENT_TYPE_CANDIDATE_EVALUATION,
     EvaluationAppender,
 )
 from .telemetry import (

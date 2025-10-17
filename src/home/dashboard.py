@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Tuple
 
 from src.storage.artifacts import ArtifactStore
 from src.storage.layout import StorageLayout
@@ -10,10 +9,10 @@ from src.storage.layout import StorageLayout
 
 @dataclass
 class HomeSummary:
-    portfolios: List[Tuple[str, str | None]]
-    parameter_sets: List[Tuple[str, str | None]]
-    simulations: List[Tuple[str, str | None]]
-    logs: List[Tuple[str, str | None]]
+    portfolios: list[tuple[str, str | None]]
+    parameter_sets: list[tuple[str, str | None]]
+    simulations: list[tuple[str, str | None]]
+    logs: list[tuple[str, str | None]]
 
 
 def collect_home_summary(data_dir: Path, limit: int = 5) -> HomeSummary:
@@ -22,8 +21,7 @@ def collect_home_summary(data_dir: Path, limit: int = 5) -> HomeSummary:
 
     portfolios = [(pf.name, pf.coverage_window.get("end")) for pf in store.list_portfolios(limit)]
     parameter_sets = [
-        (ps.parameter_set_id, ps.created_at)
-        for ps in store.list_parameter_sets(limit)
+        (ps.parameter_set_id, ps.created_at) for ps in store.list_parameter_sets(limit)
     ]
     simulations = []
     for result_path in store.list_simulations(limit):

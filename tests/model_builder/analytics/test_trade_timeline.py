@@ -1,6 +1,4 @@
-from datetime import datetime, timezone
 
-import pandas as pd
 import pytest
 
 from model_builder.analytics import TradeTimeline, build_trade_timeline

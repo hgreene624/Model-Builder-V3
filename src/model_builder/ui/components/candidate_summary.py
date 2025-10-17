@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Dict, List, Mapping, MutableMapping, Sequence
+from typing import Any
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -26,17 +27,17 @@ class BestCandidateView:
     candidate_id: str | None
     score: float
     score_delta: float
-    parameters: Dict[str, Any]
-    metrics: Dict[str, float]
-    stats: Dict[str, float]
-    training_equity: List[Dict[str, float]]
-    holdout_equity: List[Dict[str, float]]
-    coverage: Dict[str, str]
-    heatmap: Dict[str, Any]
-    timeline: Dict[str, Any]
-    all_trades: List[Any]  # Store all trades for dynamic timeline building
+    parameters: dict[str, Any]
+    metrics: dict[str, float]
+    stats: dict[str, float]
+    training_equity: list[dict[str, float]]
+    holdout_equity: list[dict[str, float]]
+    coverage: dict[str, str]
+    heatmap: dict[str, Any]
+    timeline: dict[str, Any]
+    all_trades: list[Any]  # Store all trades for dynamic timeline building
 
-    def to_session(self) -> Dict[str, Any]:
+    def to_session(self) -> dict[str, Any]:
         return {
             "run_id": self.run_id,
             "candidate_id": self.candidate_id,
@@ -54,7 +55,7 @@ class BestCandidateView:
         }
 
     @classmethod
-    def from_session(cls, payload: Mapping[str, Any]) -> "BestCandidateView":
+    def from_session(cls, payload: Mapping[str, Any]) -> BestCandidateView:
         return cls(
             run_id=str(payload["run_id"]),
             candidate_id=payload.get("candidate_id"),
@@ -114,7 +115,7 @@ def _split_training_holdout(
     holdout_start: str,
     warmup_start: str,
     train_start: str,
-) -> tuple[List[Dict[str, float]], List[Dict[str, float]], Dict[str, str]]:
+) -> tuple[list[dict[str, float]], list[dict[str, float]], dict[str, str]]:
     if frame.empty:
         coverage = {
             "warmup_start": warmup_start,
@@ -133,11 +134,15 @@ def _split_training_holdout(
 
     training_points = [
         {"timestamp": ts.isoformat(), "equity": float(eq)}
-        for ts, eq in zip(frame.loc[training_mask, "timestamp"], frame.loc[training_mask, "equity"], strict=False)
+        for ts, eq in zip(
+            frame.loc[training_mask, "timestamp"], frame.loc[training_mask, "equity"], strict=False
+        )
     ]
     holdout_points = [
         {"timestamp": ts.isoformat(), "equity": float(eq)}
-        for ts, eq in zip(frame.loc[holdout_mask, "timestamp"], frame.loc[holdout_mask, "equity"], strict=False)
+        for ts, eq in zip(
+            frame.loc[holdout_mask, "timestamp"], frame.loc[holdout_mask, "equity"], strict=False
+        )
     ]
 
     coverage = {
@@ -149,7 +154,9 @@ def _split_training_holdout(
     return training_points, holdout_points, coverage
 
 
-def _select_candidate_event(history: Sequence[Mapping[str, Any]], candidate_id: str | None) -> Mapping[str, Any] | None:
+def _select_candidate_event(
+    history: Sequence[Mapping[str, Any]], candidate_id: str | None
+) -> Mapping[str, Any] | None:
     if not history:
         return None
     if candidate_id:
@@ -157,8 +164,6 @@ def _select_candidate_event(history: Sequence[Mapping[str, Any]], candidate_id: 
             if str(entry.get("candidate_id")) == candidate_id:
                 return entry
     return history[-1]
-
-
 
 
 def build_best_candidate_view(result) -> BestCandidateView | None:  # type: ignore[valid-type]
@@ -218,7 +223,7 @@ def build_best_candidate_view(result) -> BestCandidateView | None:  # type: igno
         coverage=coverage,
         heatmap=heatmap.to_dict(),
         timeline=trade_timeline.to_dict(),
-         all_trades=result.trades,
+        all_trades=result.trades,
     )
 
 
@@ -286,7 +291,7 @@ def _build_equity_figure(view: BestCandidateView) -> go.Figure:
     return fig
 
 
-def _build_heatmap_figure(heatmap: Dict[str, Any]) -> go.Figure:
+def _build_heatmap_figure(heatmap: dict[str, Any]) -> go.Figure:
     fig = go.Figure()
     windows = heatmap.get("windows") or []
     dates = heatmap.get("dates") or []
@@ -297,9 +302,7 @@ def _build_heatmap_figure(heatmap: Dict[str, Any]) -> go.Figure:
 
     labels = [f"{int(window)}d" for window in windows]
     x_values = [pd.to_datetime(value) for value in dates]
-    z_values = [
-        [None if value is None else float(value) for value in row] for row in matrix
-    ]
+    z_values = [[None if value is None else float(value) for value in row] for row in matrix]
 
     fig.add_trace(
         go.Heatmap(
@@ -322,7 +325,7 @@ def _build_heatmap_figure(heatmap: Dict[str, Any]) -> go.Figure:
     return fig
 
 
-def _build_timeline_figure(timeline: Dict[str, Any]) -> go.Figure:
+def _build_timeline_figure(timeline: dict[str, Any]) -> go.Figure:
     fig = go.Figure()
     points = timeline.get("points") or []
     if not points:
@@ -337,11 +340,16 @@ def _build_timeline_figure(timeline: Dict[str, Any]) -> go.Figure:
 
     frame = pd.DataFrame(points)
     from plotly import colors as plotly_colors
+
     frame["entry"] = pd.to_datetime(frame["entry"])
     frame["exit"] = pd.to_datetime(frame["exit"])
     frame["return_pct"] = frame["return_pct"].astype(float)
-    frame["size_fraction"] = frame.get("size_fraction", pd.Series(0.0, index=frame.index)).astype(float)
-    frame["duration_days"] = frame.get("duration_days", pd.Series(0.0, index=frame.index)).astype(float)
+    frame["size_fraction"] = frame.get("size_fraction", pd.Series(0.0, index=frame.index)).astype(
+        float
+    )
+    frame["duration_days"] = frame.get("duration_days", pd.Series(0.0, index=frame.index)).astype(
+        float
+    )
 
     return_series = frame["return_pct"].fillna(0.0)
     color_domain = timeline.get("color_domain")
@@ -450,7 +458,7 @@ def _build_timeline_figure(timeline: Dict[str, Any]) -> go.Figure:
 
     window_start = timeline.get("window_start")
     window_end = timeline.get("window_end")
-    xaxis_kwargs: Dict[str, Any] = {"title": "Date", "type": "date"}
+    xaxis_kwargs: dict[str, Any] = {"title": "Date", "type": "date"}
     if window_start and window_end:
         start_ts = pd.to_datetime(window_start)
         end_ts = pd.to_datetime(window_end)
@@ -486,7 +494,10 @@ def render_best_candidate(view: BestCandidateView) -> None:
         st.json(view.parameters)
     with col_b:
         metrics_frame = pd.DataFrame(
-            {"Metric": list(view.metrics.keys()), "Value": [float(v) for v in view.metrics.values()]}
+            {
+                "Metric": list(view.metrics.keys()),
+                "Value": [float(v) for v in view.metrics.values()],
+            }
         )
         stats_frame = pd.DataFrame(
             {"Stat": list(view.stats.keys()), "Value": [float(v) for v in view.stats.values()]}
@@ -497,7 +508,9 @@ def render_best_candidate(view: BestCandidateView) -> None:
         st.dataframe(stats_frame.set_index("Stat"), use_container_width=True)
 
     # Toggle for window selection
-    show_full_window = st.toggle("Show Full Training + Holdout Window", value=False, key=f"window_toggle_{view.run_id}")
+    show_full_window = st.toggle(
+        "Show Full Training + Holdout Window", value=False, key=f"window_toggle_{view.run_id}"
+    )
 
     # Determine window boundaries
     if show_full_window:
@@ -541,6 +554,7 @@ def render_best_candidate(view: BestCandidateView) -> None:
 
     # Rebuild heatmap with selected window
     from model_builder.analytics import build_momentum_heatmap, build_trade_timeline
+
     heatmap_data = build_momentum_heatmap(equity_series)
     heatmap_fig = _build_heatmap_figure(heatmap_data.to_dict())
     st.plotly_chart(heatmap_fig, use_container_width=True)

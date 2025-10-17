@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Iterable, List, Sequence
 
 import pandas as pd
 
@@ -50,7 +50,7 @@ def filter_universe(
     search_term = (search or "").strip().lower()
     selected_sectors = [sector for sector in (sectors or []) if sector]
 
-    matched: List[UniverseSymbol] = []
+    matched: list[UniverseSymbol] = []
     for symbol in universe.symbols:
         if not _passes_search(symbol, search_term):
             continue
@@ -86,6 +86,6 @@ def filter_universe(
     return frame, stats
 
 
-def available_sectors(universe: IndexUniverse) -> List[str]:
+def available_sectors(universe: IndexUniverse) -> list[str]:
     sectors = {symbol.sector for symbol in universe.symbols if symbol.sector}
     return sorted(sectors)

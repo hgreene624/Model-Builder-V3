@@ -109,10 +109,10 @@ Manual verification only; no new automated tests planned in this phase.
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T032 [P] [Polish] Update `docs/configuration.md` and `specs/003-the-model-builder/quickstart.md` with new CLI commands and storage locations.
-- [ ] T033 [Polish] Run full validation suite (`ruff format`, `ruff check --fix`, `pytest -m "not slow"`) and address issues.
-- [ ] T034 [Polish] Refresh `specs/003-the-model-builder/contracts/model-builder.openapi.yaml` example payloads and ensure CLI help text matches commands.
-- [ ] T035 [Polish] Conduct UX pass on `pages/2_Model_Builder.py` (copy tweaks, empty states, error messaging) and capture screenshots for PR checklist.
+- [X] T032 [P] [Polish] Update `docs/configuration.md` and `specs/003-the-model-builder/quickstart.md` with new CLI commands and storage locations.
+- [X] T033 [Polish] Run full validation suite (`ruff format`, `ruff check --fix`, `pytest -m "not slow"`) and address issues.
+- [X] T034 [Polish] Refresh `specs/003-the-model-builder/contracts/model-builder.openapi.yaml` example payloads and ensure CLI help text matches commands.
+- [X] T035 [Polish] Conduct UX pass on `pages/2_Model_Builder.py` (copy tweaks, empty states, error messaging) and capture screenshots for PR checklist.
 
 ---
 

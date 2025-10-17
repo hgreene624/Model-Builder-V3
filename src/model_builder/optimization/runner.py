@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping, MutableSequence, Sequence
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Callable, Mapping, MutableSequence, Sequence
+from datetime import UTC, datetime
 
 from .telemetry import TelemetryLogWriter
 
@@ -13,7 +13,7 @@ EVENT_TYPE_CANDIDATE_EVALUATION = "candidate_evaluation"
 
 
 def _utc_now() -> datetime:
-    return datetime.now(tz=timezone.utc)
+    return datetime.now(tz=UTC)
 
 
 def _to_float_mapping(values: Mapping[str, float]) -> dict[str, float]:
@@ -40,7 +40,7 @@ def _normalize_metadata(metadata: Mapping[str, object] | None) -> dict[str, obje
 
 
 def _isoformat(value: datetime) -> str:
-    return value.astimezone(timezone.utc).isoformat(timespec="milliseconds")
+    return value.astimezone(UTC).isoformat(timespec="milliseconds")
 
 
 @dataclass(frozen=True)

@@ -1,9 +1,8 @@
 from __future__ import annotations
 
+import warnings
 from collections import OrderedDict
 from pathlib import Path
-from typing import Dict, Tuple
-import warnings
 
 import pandas as pd
 
@@ -29,7 +28,7 @@ class MarketDataCache:
         self.max_items = max_items
         self.parquet_available = _PARQUET_AVAILABLE
         self._parquet_warning_emitted = False
-        self._memory: "OrderedDict[Tuple[str, str], pd.DataFrame]" = OrderedDict()
+        self._memory: OrderedDict[tuple[str, str], pd.DataFrame] = OrderedDict()
 
     # Memory cache -----------------------------------------------------
     def get_memory(self, symbol: str, interval: str) -> pd.DataFrame | None:
@@ -83,9 +82,7 @@ class MarketDataCache:
         tmp_path.replace(path)
         return path
 
-    def load_disk(
-        self, symbol: str, interval: str, start: str, end: str
-    ) -> pd.DataFrame | None:
+    def load_disk(self, symbol: str, interval: str, start: str, end: str) -> pd.DataFrame | None:
         if not self.parquet_available:
             return None
         path = self._shard_file(symbol, interval, start, end)

@@ -1,4 +1,3 @@
-import os
 from src.config.settings import AppSettings
 
 settings = AppSettings.from_env()

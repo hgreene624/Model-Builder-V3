@@ -177,6 +177,37 @@ components:
         parameters:
           type: object
           additionalProperties: {}
+      example:
+        name: "Momentum Strategy"
+        description: "ATR breakout with optimized parameters"
+        portfolio_id: "momentum_20241017"
+        train_percentage: 0.7
+        atr_warmup_days: 14
+        parameters:
+          symbol_count: 5
+          atr_window: 14
+          breakout_lookback: 20
+          breakout_multiplier: 2.0
+          risk_fraction: 0.02
+          min_weight: 0.05
+          max_weight: 0.25
+          population_size: 90
+          generations: 30
+          max_workers: 8
+          seed: 42
+          objective_weights:
+            cagr: 0.5
+            calmar: 0.3
+            sharpe: 0.2
+          bounds:
+            atr_window: [10, 30]
+            breakout_lookback: [15, 45]
+            breakout_multiplier: [1.5, 3.5]
+            risk_fraction: [0.01, 0.04]
+          max_trade_rate: 50.0
+          min_hold_days: 2.0
+          initial_capital: 100000.0
+          use_synthetic: false
     StrategyProfile:
       allOf:
         - $ref: "#/components/schemas/StrategyProfileCreate"

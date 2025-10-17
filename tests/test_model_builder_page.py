@@ -1,6 +1,6 @@
+import sys
 from datetime import date
 from pathlib import Path
-import sys
 
 import pandas as pd
 

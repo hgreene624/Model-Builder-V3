@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 import pandas as pd
 import pytest
@@ -35,7 +35,7 @@ def manual_wilder_atr(bars: pd.DataFrame, window: int) -> pd.Series:
     true_ranges: list[float] = []
     previous_close: float | None = None
 
-    for high, low, close in zip(highs, lows, closes):
+    for high, low, close in zip(highs, lows, closes, strict=False):
         if previous_close is None:
             true_range = high - low
         else:

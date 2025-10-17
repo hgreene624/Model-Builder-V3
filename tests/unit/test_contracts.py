@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import is_dataclass
 
-from src.models.contracts import BacktestResult, Portfolio, ParameterSet, TradeRecord
+from src.models.contracts import BacktestResult, ParameterSet, Portfolio, TradeRecord
 
 
 def test_contracts_are_dataclasses() -> None:

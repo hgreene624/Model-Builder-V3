@@ -7,6 +7,4 @@ import streamlit as st
 st.set_page_config(page_title="Simulation Review", layout="wide")
 
 st.title("Simulation Review")
-st.info(
-    "This page will allow you to run fresh simulations, review KPIs, and export bundles."
-)
+st.info("This page will allow you to run fresh simulations, review KPIs, and export bundles.")

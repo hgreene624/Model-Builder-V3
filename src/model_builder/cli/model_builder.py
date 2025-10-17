@@ -2,14 +2,15 @@ from __future__ import annotations
 
 import json
 import time
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Optional, Sequence
+from typing import Any
 
 import click
 
-from model_builder.profiles import ProfileNotFoundError, ProfilesService, StrategyProfileRepository
 from model_builder.optimization import EVENT_TYPE_CANDIDATE_EVALUATION
 from model_builder.optimization.telemetry import TelemetryLogWriter
+from model_builder.profiles import ProfileNotFoundError, ProfilesService, StrategyProfileRepository
 from src.config.settings import AppSettings
 from src.engine.atr_breakout import ATRBreakoutConfig, RiskSettings
 from src.engine.backtest import CostModel
@@ -35,7 +36,7 @@ def _build_context() -> tuple[AppSettings, StorageLayout, ProfilesService, Artif
     return settings, layout, service, store
 
 
-def _load_payload_from_file(path: Optional[Path]) -> dict[str, Any]:
+def _load_payload_from_file(path: Path | None) -> dict[str, Any]:
     if path is None:
         return {}
     text = path.read_text(encoding="utf-8")
@@ -51,13 +52,13 @@ def _load_payload_from_file(path: Optional[Path]) -> dict[str, Any]:
 def _merge_payload(
     base: dict[str, Any],
     *,
-    profile_id: Optional[str],
-    name: Optional[str],
-    description: Optional[str],
-    portfolio_id: Optional[str],
-    train_percentage: Optional[float],
-    atr_warmup_days: Optional[int],
-    parameters: Optional[str],
+    profile_id: str | None,
+    name: str | None,
+    description: str | None,
+    portfolio_id: str | None,
+    train_percentage: float | None,
+    atr_warmup_days: int | None,
+    parameters: str | None,
 ) -> dict[str, Any]:
     payload = dict(base)
     if profile_id is not None:
@@ -142,7 +143,10 @@ def _ensure_objective_positive(weights: ObjectiveWeights) -> None:
 
 def _bounds(parameters: Mapping[str, Any]) -> dict[str, tuple[float, float]]:
     defaults = {
-        "atr_window": (float(parameters.get("atr_window", 14) - 4), float(parameters.get("atr_window", 14) + 4)),
+        "atr_window": (
+            float(parameters.get("atr_window", 14) - 4),
+            float(parameters.get("atr_window", 14) + 4),
+        ),
         "breakout_lookback": (
             float(parameters.get("breakout_lookback", 20) - 5),
             float(parameters.get("breakout_lookback", 20) + 5),
@@ -269,21 +273,23 @@ def profiles_list(output: str) -> None:
 @click.option("--name", help="Profile display name.")
 @click.option("--description", help="Optional description.")
 @click.option("--portfolio-id", help="Associated portfolio identifier.")
-@click.option("--train-percentage", type=float, help="Fraction of coverage assigned to training (0-1).")
+@click.option(
+    "--train-percentage", type=float, help="Fraction of coverage assigned to training (0-1)."
+)
 @click.option("--atr-warmup-days", type=int, help="ATR warmup days.")
 @click.option(
     "--parameters",
     help="JSON object describing strategy parameters (e.g. '{\"atr_window\": 14}').",
 )
 def profiles_save(
-    file_path: Optional[Path],
-    profile_id: Optional[str],
-    name: Optional[str],
-    description: Optional[str],
-    portfolio_id: Optional[str],
-    train_percentage: Optional[float],
-    atr_warmup_days: Optional[int],
-    parameters: Optional[str],
+    file_path: Path | None,
+    profile_id: str | None,
+    name: str | None,
+    description: str | None,
+    portfolio_id: str | None,
+    train_percentage: float | None,
+    atr_warmup_days: int | None,
+    parameters: str | None,
 ) -> None:
     """Create or update a strategy profile."""
 
@@ -329,7 +335,9 @@ def profiles_delete(profile_id: str, force: bool) -> None:
 
 @cli.command("optimize")
 @click.option("--profile-id", "profile_id", required=True, help="Strategy profile identifier.")
-@click.option("--train-percent", "train_percent", type=float, help="Override training percentage (0-1).")
+@click.option(
+    "--train-percent", "train_percent", type=float, help="Override training percentage (0-1)."
+)
 @click.option("--warmup-days", type=int, help="Override ATR warmup days.")
 @click.option("--symbol-count", type=int, help="Override symbol sampling count.")
 @click.option("--seed", type=int, help="Override RNG seed.")
@@ -339,15 +347,17 @@ def profiles_delete(profile_id: str, force: bool) -> None:
     default=None,
     help="Force optimisation to use synthetic OHLCV data.",
 )
-@click.option("--output", type=click.Path(path_type=Path), help="Optional file path for JSON summary output.")
+@click.option(
+    "--output", type=click.Path(path_type=Path), help="Optional file path for JSON summary output."
+)
 def optimize(  # noqa: PLR0915
     profile_id: str,
-    train_percent: Optional[float],
-    warmup_days: Optional[int],
-    symbol_count: Optional[int],
-    seed: Optional[int],
-    use_synthetic: Optional[bool],
-    output: Optional[Path],
+    train_percent: float | None,
+    warmup_days: int | None,
+    symbol_count: int | None,
+    seed: int | None,
+    use_synthetic: bool | None,
+    output: Path | None,
 ) -> None:
     """Run an optimisation using a saved strategy profile."""
 

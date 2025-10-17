@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime
-
 import pandas as pd
 import pytest
 
-from src.data.loader import MarketDataLoader
 from src.data.cache import MarketDataCache
+from src.data.loader import MarketDataLoader
 from src.portfolio.services import (
     apply_filters,
     build_portfolio,

@@ -1,12 +1,11 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Dict, Iterable, List, Tuple
 
 import pandas as pd
 
 from src.data.loader import MarketDataLoader, SymbolDiagnostics
-
 
 COVERAGE_COMPLETENESS_THRESHOLD = 0.9
 
@@ -57,7 +56,9 @@ def _coverage_status(
         return "partial"
     coverage_ratio = observations / expected
     if coverage_ratio >= COVERAGE_COMPLETENESS_THRESHOLD:
-        start_ok = required_start is None or (coverage_start is not None and coverage_start <= required_start)
+        start_ok = required_start is None or (
+            coverage_start is not None and coverage_start <= required_start
+        )
         end_ok = required_end is None or (coverage_end is not None and coverage_end >= required_end)
         if start_ok and end_ok:
             return "complete"
@@ -69,9 +70,9 @@ def fetch_liquidity(
     symbols: Iterable[str],
     start: str,
     end: str,
-) -> Tuple[pd.DataFrame, LiquiditySummary, List[Dict[str, str]]]:
-    records: List[Dict[str, object]] = []
-    errors: List[Dict[str, str]] = []
+) -> tuple[pd.DataFrame, LiquiditySummary, list[dict[str, str]]]:
+    records: list[dict[str, object]] = []
+    errors: list[dict[str, str]] = []
 
     normalized_symbols = [symbol.strip().upper() for symbol in symbols if symbol]
     for symbol in normalized_symbols:
@@ -106,12 +107,8 @@ def fetch_liquidity(
 
         observations = int(frame.shape[0])
         expected = _expected_observations(start, requested_end)
-        coverage_start = (
-            frame.index.min().date().isoformat() if observations else None
-        )
-        coverage_end = (
-            frame.index.max().date().isoformat() if observations else None
-        )
+        coverage_start = frame.index.min().date().isoformat() if observations else None
+        coverage_end = frame.index.max().date().isoformat() if observations else None
 
         if expected <= 0:
             missing_fraction = 1.0 if observations == 0 else 0.0
@@ -134,7 +131,7 @@ def fetch_liquidity(
         if error_message:
             errors.append({"symbol": symbol, "error": error_message})
 
-        shard_hints: Dict[str, object] | None = None
+        shard_hints: dict[str, object] | None = None
         if diagnostics is not None and diagnostics.shard_path:
             shard_hints = {
                 "cacheKey": diagnostics.shard_path,
@@ -182,7 +179,9 @@ def fetch_liquidity(
         retrieved=int((frame["coverage_status"] != "missing").sum()) if not frame.empty else 0,
         complete=int((frame["coverage_status"] == "complete").sum()) if not frame.empty else 0,
         partial=int((frame["coverage_status"] == "partial").sum()) if not frame.empty else 0,
-        missing=int((frame["coverage_status"] == "missing").sum()) if not frame.empty else len(normalized_symbols),
+        missing=int((frame["coverage_status"] == "missing").sum())
+        if not frame.empty
+        else len(normalized_symbols),
     )
 
     return frame, summary, errors

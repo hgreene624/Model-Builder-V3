@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List, Mapping, Sequence
+from typing import Any
 
 import pandas as pd
 
@@ -32,7 +33,7 @@ class TradeTimelinePoint:
     display_duration_days: float
     size_fraction: float
     bar_width: float
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
     def to_dict(self) -> dict[str, object]:
         payload = {
@@ -58,7 +59,7 @@ class TradeTimelinePoint:
 class TradeTimeline:
     """Aggregated trade timeline output."""
 
-    points: List[TradeTimelinePoint]
+    points: list[TradeTimelinePoint]
     color_scale: str = DEFAULT_COLOR_SCALE
     color_mid: float = 0.0
     color_domain: float | None = None
@@ -139,7 +140,7 @@ def _normalize_metadata(payload: Mapping[str, Any]) -> dict[str, Any]:
     return metadata
 
 
-def _size_fraction(values: List[float]) -> List[float]:
+def _size_fraction(values: list[float]) -> list[float]:
     if not values:
         return []
     max_value = max(values)
@@ -148,8 +149,8 @@ def _size_fraction(values: List[float]) -> List[float]:
     return [value / max_value for value in values]
 
 
-def _calc_bar_width(fractions: Iterable[float]) -> List[float]:
-    widths: List[float] = []
+def _calc_bar_width(fractions: Iterable[float]) -> list[float]:
+    widths: list[float] = []
     span = MAX_WIDTH - MIN_WIDTH
     for fraction in fractions:
         clamped = max(0.0, min(1.0, fraction))
@@ -157,8 +158,12 @@ def _calc_bar_width(fractions: Iterable[float]) -> List[float]:
     return widths
 
 
-def _compute_return_pct(pnl: float, preferred_notional: float | None, fallback_notional: float) -> float | None:
-    basis = preferred_notional if preferred_notional and preferred_notional > 0 else fallback_notional
+def _compute_return_pct(
+    pnl: float, preferred_notional: float | None, fallback_notional: float
+) -> float | None:
+    basis = (
+        preferred_notional if preferred_notional and preferred_notional > 0 else fallback_notional
+    )
     if basis <= 0:
         return None
     return (pnl / basis) * 100.0
@@ -180,7 +185,7 @@ def build_trade_timeline(
     if start_ts is None or end_ts is None:
         raise ValueError("window_start and window_end must be valid timestamps")
 
-    normalized_trades: List[dict[str, Any]] = []
+    normalized_trades: list[dict[str, Any]] = []
     for raw in trades:
         payload = dict(_to_mapping(raw))
         entry_ts = _parse_timestamp(payload.get("entry_timestamp") or payload.get("timestamp"))
@@ -246,18 +251,24 @@ def build_trade_timeline(
         normalized_trades = normalized_trades[-MAX_TIMELINE_TRADES:]
 
     size_basis = [
-        trade["portfolio_notional"] if trade["portfolio_notional"] and trade["portfolio_notional"] > 0 else trade["notional"]
+        trade["portfolio_notional"]
+        if trade["portfolio_notional"] and trade["portfolio_notional"] > 0
+        else trade["notional"]
         for trade in normalized_trades
     ]
     fractions = _size_fraction(size_basis)
     widths = _calc_bar_width(fractions)
 
     max_abs_return = max(
-        (abs(trade["return_pct"]) for trade in normalized_trades if trade["return_pct"] is not None),
+        (
+            abs(trade["return_pct"])
+            for trade in normalized_trades
+            if trade["return_pct"] is not None
+        ),
         default=None,
     )
 
-    points: List[TradeTimelinePoint] = []
+    points: list[TradeTimelinePoint] = []
     for trade, fraction, width in zip(normalized_trades, fractions, widths, strict=False):
         metadata = dict(trade["metadata"])
         metadata["size_fraction"] = fraction

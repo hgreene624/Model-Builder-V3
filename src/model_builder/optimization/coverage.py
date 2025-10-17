@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date
-from typing import List, Sequence
 
 from model_builder.profiles.constants import MIN_HOLDOUT_DAYS
 from model_builder.profiles.models import CoverageWindow
@@ -56,7 +56,7 @@ def _to_date(value: date | str) -> date:
     return date.fromisoformat(value)
 
 
-def _normalize_dates(dates: Sequence[date | str]) -> List[date]:
+def _normalize_dates(dates: Sequence[date | str]) -> list[date]:
     normalized = sorted({_to_date(value) for value in dates})
     if not normalized:
         raise ValueError("Coverage requires at least one trading day.")

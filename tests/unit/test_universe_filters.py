@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pandas as pd
-
 from src.data.universe_loader import IndexUniverse, UniverseSymbol
 from src.portfolio.filters import FilterStats, available_sectors, filter_universe
 
