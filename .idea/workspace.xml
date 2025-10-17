@@ -4,9 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="3a0f8e7c-00d9-4699-9f00-5cef80cd1d44" name="Changes" comment="working graphs, need spacing adjustment">
-      <change beforePath="$PROJECT_DIR$/src/model_builder/ui/components/candidate_summary.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model_builder/ui/components/candidate_summary.py" afterDir="false" />
-    </list>
+    <list default="true" id="3a0f8e7c-00d9-4699-9f00-5cef80cd1d44" name="Changes" comment="working graphs" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -79,7 +77,7 @@
       <workItem from="1760359549779" duration="2314000" />
       <workItem from="1760361881445" duration="34908000" />
       <workItem from="1760462003973" duration="18095000" />
-      <workItem from="1760717314765" duration="2171000" />
+      <workItem from="1760717314765" duration="2932000" />
     </task>
     <task id="LOCAL-00001" summary="Project Created">
       <option name="closed" value="true" />
@@ -233,7 +231,15 @@
       <option name="project" value="LOCAL" />
       <updated>1760718844070</updated>
     </task>
-    <option name="localTasksCounter" value="20" />
+    <task id="LOCAL-00020" summary="working graphs">
+      <option name="closed" value="true" />
+      <created>1760719706672</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1760719706672</updated>
+    </task>
+    <option name="localTasksCounter" value="21" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -268,6 +274,7 @@
     <MESSAGE value="reformatting of model builder dashboard" />
     <MESSAGE value="model builder dashboard date range toggle" />
     <MESSAGE value="working graphs, need spacing adjustment" />
-    <option name="LAST_COMMIT_MESSAGE" value="working graphs, need spacing adjustment" />
+    <MESSAGE value="working graphs" />
+    <option name="LAST_COMMIT_MESSAGE" value="working graphs" />
   </component>
 </project>

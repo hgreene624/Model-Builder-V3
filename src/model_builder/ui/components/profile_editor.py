@@ -269,24 +269,27 @@ def render_profile_editor(
         format="%.3f",
     )
 
+    import os
+    system_cpu_count = os.cpu_count() or 1
+
     col_m, col_n, col_o = st.columns(3)
     population_size = col_m.number_input(
         "Population Size",
         min_value=3,
-        max_value=30,
+        max_value=300,
         value=int(parameters.get("population_size", 9)),
     )
     generations = col_n.number_input(
         "Generations",
         min_value=1,
-        max_value=20,
+        max_value=200,
         value=int(parameters.get("generations", 3)),
     )
     max_workers = col_o.number_input(
         "Max Workers",
         min_value=1,
-        max_value=4,
-        value=int(parameters.get("max_workers", 1)),
+        max_value=system_cpu_count,
+        value=min(int(parameters.get("max_workers", system_cpu_count)), system_cpu_count),
     )
 
     seed = st.number_input(
