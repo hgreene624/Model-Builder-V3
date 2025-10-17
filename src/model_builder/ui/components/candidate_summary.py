@@ -495,21 +495,19 @@ def render_best_candidate(view: BestCandidateView) -> None:
     equity_fig = _build_equity_figure(view)
     st.plotly_chart(equity_fig, use_container_width=True)
 
-    col_heatmap, col_timeline = st.columns(2)
-    with col_heatmap:
-        heatmap_fig = _build_heatmap_figure(view.heatmap)
-        st.plotly_chart(heatmap_fig, use_container_width=True)
-        st.caption(view.heatmap.get("narrative", ""))
-    with col_timeline:
-        timeline_fig = _build_timeline_figure(view.timeline)
-        st.plotly_chart(timeline_fig, use_container_width=True)
-        if not view.timeline.get("points"):
-            st.caption("No trades executed within the selected window.")
-        else:
-            st.caption(
-                f"Trades · wins {view.timeline.get('wins', 0)} | losses {view.timeline.get('losses', 0)} "
-                f"| flats {view.timeline.get('flats', 0)} · total notional {view.timeline.get('total_notional', 0):,.0f}"
-            )
+    heatmap_fig = _build_heatmap_figure(view.heatmap)
+    st.plotly_chart(heatmap_fig, use_container_width=True)
+    st.caption(view.heatmap.get("narrative", ""))
+
+    timeline_fig = _build_timeline_figure(view.timeline)
+    st.plotly_chart(timeline_fig, use_container_width=True)
+    if not view.timeline.get("points"):
+        st.caption("No trades executed within the selected window.")
+    else:
+        st.caption(
+            f"Trades · wins {view.timeline.get('wins', 0)} | losses {view.timeline.get('losses', 0)} "
+            f"| flats {view.timeline.get('flats', 0)} · total notional {view.timeline.get('total_notional', 0):,.0f}"
+        )
 
 
 def store_best_candidate(session_state: MutableMapping[str, Any], view: BestCandidateView) -> None:
