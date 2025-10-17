@@ -180,6 +180,7 @@ def _summarize_result(result: Any, profile_id: str, portfolio_id: str) -> dict[s
         "parameter_set_id": result.parameter_set.parameter_set_id,
         "parameter_path": str(result.parameter_path),
         "log_path": str(result.log_path),
+        "evaluation_log_path": str(result.evaluation_log_path),
         "metrics": result.metrics,
         "stats": result.stats,
         "coverage": {
@@ -191,6 +192,7 @@ def _summarize_result(result: Any, profile_id: str, portfolio_id: str) -> dict[s
             "warmup_end": coverage.warmup.slice.end.isoformat(),
             "warmup_deficit_days": coverage.warmup.deficit_days,
         },
+        "artifacts": dict(result.artifact_paths),
     }
 
 

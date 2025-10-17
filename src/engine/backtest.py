@@ -117,6 +117,8 @@ def run_backtest(
             exit_timestamp: str | None = None
             closed_position = False
 
+            entry_timestamp_value: str | None = None
+
             if delta_units > 0:
                 positions[symbol] += delta_units
                 cost_basis[symbol] += delta_units * price
@@ -144,6 +146,7 @@ def run_backtest(
                             1.0,
                         )
                         hold_durations.append(float(duration))
+                        entry_timestamp_value = entry.isoformat()
                     open_timestamps[symbol] = None
                     exit_timestamp = pd.Timestamp(timestamp).isoformat()
 
@@ -156,6 +159,7 @@ def run_backtest(
                 costs=costs,
                 exit_timestamp=exit_timestamp,
                 pnl=float(realised_pnl),
+                entry_timestamp=entry_timestamp_value,
             )
             trades.append(trade)
             if closed_position:

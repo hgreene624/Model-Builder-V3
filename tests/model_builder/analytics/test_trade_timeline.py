@@ -17,6 +17,7 @@ def _trade(
     pnl: float,
     action: str = "BUY",
     exit_timestamp: str | None = None,
+    entry_timestamp: str | None = None,
 ) -> TradeRecord:
     return TradeRecord(
         timestamp=timestamp,
@@ -27,6 +28,7 @@ def _trade(
         costs={"total": 0.0},
         exit_timestamp=exit_timestamp,
         pnl=pnl,
+        entry_timestamp=entry_timestamp,
     )
 
 
@@ -40,6 +42,7 @@ def test_build_trade_timeline_from_trade_records() -> None:
             pnl=500.0,
             action="BUY",
             exit_timestamp="2024-01-20T00:00:00+00:00",
+            entry_timestamp="2024-01-05T00:00:00+00:00",
         ),
         _trade(
             timestamp="2024-01-10T00:00:00+00:00",
@@ -49,6 +52,7 @@ def test_build_trade_timeline_from_trade_records() -> None:
             pnl=-250.0,
             action="SELL",
             exit_timestamp="2024-01-18T00:00:00+00:00",
+            entry_timestamp="2024-01-08T00:00:00+00:00",
         ),
     ]
 
@@ -72,10 +76,10 @@ def test_build_trade_timeline_from_trade_records() -> None:
     assert point_one.display_duration_days == pytest.approx(15.0)
 
     assert point_two.symbol == "MSFT"
-    assert point_two.duration_days == pytest.approx(8.0)
+    assert point_two.duration_days == pytest.approx(10.0)
     assert point_two.return_pct is not None and point_two.return_pct < 0
     assert MIN_WIDTH <= point_two.bar_width <= MAX_WIDTH
-    assert point_two.display_duration_days == pytest.approx(8.0)
+    assert point_two.display_duration_days == pytest.approx(10.0)
 
 
 def test_build_trade_timeline_accepts_mapping_payload() -> None:
@@ -87,6 +91,7 @@ def test_build_trade_timeline_accepts_mapping_payload() -> None:
             "price": 200.0,
             "pnl": 0.0,
             "exit_timestamp": "2024-02-03T00:00:00+00:00",
+            "entry_timestamp": "2024-02-01T00:00:00+00:00",
         }
     ]
 

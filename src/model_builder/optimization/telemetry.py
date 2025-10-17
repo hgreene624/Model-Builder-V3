@@ -12,6 +12,7 @@ from src.storage.layout import StorageLayout
 
 TelemetryListener = Callable[[dict], None]
 DEFAULT_EVENT_SCHEMA_VERSION = "1.0.0"
+EVENT_TYPE_BEST_CANDIDATE_SNAPSHOT = "best_candidate_snapshot"
 
 
 def _utc_now() -> str:

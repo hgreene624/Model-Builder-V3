@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import json
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 from functools import partial
 
@@ -22,7 +23,12 @@ from src.optimizer.telemetry import TelemetryPublisher
 from src.optimizer.training_logger import TrainingLogger
 from src.storage.layout import StorageLayout
 
-from model_builder.optimization import EvaluationAppender, TelemetryLogWriter
+from model_builder.analytics import build_momentum_heatmap, build_trade_timeline
+from model_builder.optimization import (
+    EVENT_TYPE_BEST_CANDIDATE_SNAPSHOT,
+    EvaluationAppender,
+    TelemetryLogWriter,
+)
 from model_builder.optimization.coverage import CoveragePlan, derive_plan
 
 
@@ -55,6 +61,7 @@ class OptimizationResult:
     best_config: ATRBreakoutConfig
     best_risk: RiskSettings
     coverage_plan: CoveragePlan
+    artifact_paths: Dict[str, str] = field(default_factory=dict)
 
 
 def build_loader(settings: AppSettings) -> MarketDataLoader | None:
@@ -110,6 +117,151 @@ def _filter_frame_by_dates(frame: pd.DataFrame, *, start: date, end: date) -> pd
 
     mask = (dates >= start) & (dates <= end)
     return frame.loc[mask]
+
+
+def _normalize_equity_curve(frame: pd.DataFrame) -> pd.DataFrame:
+    if frame is None or frame.empty:
+        return pd.DataFrame(columns=["timestamp", "equity"])
+
+    normalized = frame.copy()
+    if "timestamp" not in normalized.columns:
+        normalized = normalized.reset_index().rename(columns={"index": "timestamp"})
+    normalized["timestamp"] = pd.to_datetime(normalized["timestamp"], utc=True, errors="coerce")
+    normalized = normalized.dropna(subset=["timestamp"])
+
+    value_columns = [column for column in normalized.columns if column != "timestamp"]
+    if not value_columns:
+        raise ValueError("Equity curve data must include at least one value column.")
+    value_column = value_columns[0]
+    normalized = normalized[["timestamp", value_column]].rename(columns={value_column: "equity"})
+    normalized["equity"] = normalized["equity"].astype(float)
+    return normalized.sort_values("timestamp").reset_index(drop=True)
+
+
+def _split_equity_segments(frame: pd.DataFrame, *, plan: CoveragePlan) -> tuple[pd.DataFrame, pd.DataFrame]:
+    if frame.empty:
+        return frame.copy(), frame.copy()
+
+    timestamps = frame["timestamp"]
+    normalized_dates = timestamps.dt.normalize()
+    train_end = pd.Timestamp(plan.train.end).tz_localize("UTC")
+    holdout_start = pd.Timestamp(plan.holdout.start).tz_localize("UTC")
+
+    training_mask = normalized_dates <= train_end
+    holdout_mask = normalized_dates >= holdout_start
+
+    training = frame.loc[training_mask].copy()
+    holdout = frame.loc[holdout_mask].copy()
+    return training, holdout
+
+
+def _best_candidate_entry(
+    history: Sequence[Mapping[str, Any]],
+    best_candidate_id: str | None,
+) -> Mapping[str, Any] | None:
+    if not history:
+        return None
+    if best_candidate_id:
+        for entry in reversed(history):
+            if str(entry.get("candidate_id")) == best_candidate_id:
+                return entry
+    return max(history, key=lambda entry: float(entry.get("score", float("-inf"))))
+
+
+def _persist_best_candidate_snapshot(
+    *,
+    telemetry_writer: TelemetryLogWriter,
+    layout: StorageLayout,
+    run_id: str,
+    plan: CoveragePlan,
+    equity_curve: pd.DataFrame,
+    trades: Sequence[TradeRecord],
+    candidate_history: Sequence[Mapping[str, Any]],
+    best_candidate_id: str | None,
+) -> Tuple[Dict[str, str], dict | None]:
+    best_entry = _best_candidate_entry(candidate_history, best_candidate_id)
+    if best_entry is None:
+        return {}, None
+
+    normalized_curve = _normalize_equity_curve(equity_curve)
+    training_curve, holdout_curve = _split_equity_segments(normalized_curve, plan=plan)
+
+    holdout_series = pd.Series(dtype=float)
+    if not holdout_curve.empty:
+        holdout_series = pd.Series(
+            data=holdout_curve["equity"].values,
+            index=holdout_curve["timestamp"],
+        )
+
+    heatmap = build_momentum_heatmap(holdout_series)
+    heatmap_payload = heatmap.to_dict()
+
+    timeline = build_trade_timeline(
+        trades,
+        window_start=plan.holdout.start.isoformat(),
+        window_end=plan.holdout.end.isoformat(),
+    )
+    timeline_payload = timeline.to_dict()
+
+    equity_path = layout.evaluation_artifact_path(run_id, "holdout_equity", ".csv")
+    export_holdout = holdout_curve.copy()
+    if not export_holdout.empty:
+        export_holdout["timestamp"] = export_holdout["timestamp"].dt.tz_convert("UTC").dt.strftime(
+            "%Y-%m-%dT%H:%M:%S.%fZ"
+        )
+    export_holdout.to_csv(equity_path, index=False)
+
+    heatmap_path = layout.evaluation_artifact_path(run_id, "momentum_heatmap", ".json")
+    heatmap_path.write_text(json.dumps(heatmap_payload, indent=2), encoding="utf-8")
+
+    timeline_path = layout.evaluation_artifact_path(run_id, "trade_timeline", ".json")
+    timeline_path.write_text(json.dumps(timeline_payload, indent=2), encoding="utf-8")
+
+    artifacts = {
+        "equity_curve": str(equity_path.relative_to(layout.root)),
+        "momentum_heatmap": str(heatmap_path.relative_to(layout.root)),
+        "trade_timeline": str(timeline_path.relative_to(layout.root)),
+    }
+
+    metrics_payload = {
+        str(key): float(value)
+        for key, value in dict(best_entry.get("metrics") or {}).items()
+    }
+    parameter_payload = dict(best_entry.get("parameter_payload") or {})
+
+    coverage_payload = {
+        "train_start": plan.train.start.isoformat(),
+        "train_end": plan.train.end.isoformat(),
+        "holdout_start": plan.holdout.start.isoformat(),
+        "holdout_end": plan.holdout.end.isoformat(),
+        "warmup_start": plan.warmup.slice.start.isoformat(),
+        "warmup_end": plan.warmup.slice.end.isoformat(),
+        "warmup_deficit_days": plan.warmup.deficit_days,
+        "training_points": len(training_curve),
+        "holdout_points": len(holdout_curve),
+    }
+
+    envelope = telemetry_writer.emit(
+        EVENT_TYPE_BEST_CANDIDATE_SNAPSHOT,
+        {
+            "candidate_id": str(best_entry.get("candidate_id")),
+            "score": float(best_entry.get("score", 0.0)),
+            "score_delta": float(best_entry.get("score_delta", 0.0)),
+            "metrics": metrics_payload,
+            "parameter_payload": parameter_payload,
+            "coverage": coverage_payload,
+            "artifacts": artifacts,
+            "heatmap_narrative": heatmap_payload.get("narrative"),
+            "timeline_summary": {
+                "wins": timeline.wins,
+                "losses": timeline.losses,
+                "flats": timeline.flats,
+                "total_notional": timeline.total_notional,
+            },
+        },
+    )
+
+    return artifacts, envelope
 
 
 def resolve_coverage_window(portfolio: Portfolio) -> Tuple[str, str]:
@@ -518,6 +670,19 @@ def run_optimization(
         cost_model=cost_model,
     )
     equity_curve = pd.DataFrame(full_backtest.equity_curve)
+    trades = list(full_backtest.trades)
+    artifact_paths, snapshot_envelope = _persist_best_candidate_snapshot(
+        telemetry_writer=telemetry_writer,
+        layout=layout,
+        run_id=actual_run_id,
+        plan=coverage_plan,
+        equity_curve=equity_curve,
+        trades=trades,
+        candidate_history=candidate_history,
+        best_candidate_id=best_candidate_id,
+    )
+    if snapshot_envelope is not None:
+        telemetry_events.append(snapshot_envelope)
 
     return OptimizationResult(
         parameter_set=parameter_set,
@@ -527,7 +692,7 @@ def run_optimization(
         metrics=metrics,
         stats=stats,
         equity_curve=equity_curve,
-        trades=list(full_backtest.trades),
+        trades=trades,
         issues=issues,
         synthetic=synthetic_used,
         run_id=actual_run_id,
@@ -537,4 +702,5 @@ def run_optimization(
         best_config=best_config,
         best_risk=best_risk,
         coverage_plan=coverage_plan,
+        artifact_paths=artifact_paths,
     )

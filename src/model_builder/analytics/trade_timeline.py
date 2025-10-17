@@ -100,6 +100,7 @@ def _to_mapping(trade: TradeRecord | Mapping[str, object]) -> Mapping[str, objec
     if isinstance(trade, TradeRecord):
         return {
             "timestamp": trade.timestamp,
+            "entry_timestamp": trade.entry_timestamp,
             "symbol": trade.symbol,
             "action": trade.action,
             "quantity": trade.quantity,
@@ -182,11 +183,9 @@ def build_trade_timeline(
     normalized_trades: List[dict[str, Any]] = []
     for raw in trades:
         payload = dict(_to_mapping(raw))
-        entry_ts = _parse_timestamp(payload.get("timestamp"))
+        entry_ts = _parse_timestamp(payload.get("entry_timestamp") or payload.get("timestamp"))
         exit_ts = _parse_timestamp(payload.get("exit_timestamp"))
         if entry_ts is None or exit_ts is None:
-            continue
-        if exit_ts is None:
             continue
 
         if exit_ts <= entry_ts:

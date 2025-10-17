@@ -146,12 +146,23 @@ def test_optimize_command_writes_metadata(tmp_path: Path) -> None:
 
     log_path = tmp_path / "evaluations" / f"{run_id}.jsonl"
     assert log_path.exists()
+    assert Path(summary["evaluation_log_path"]) == log_path
+
+    artifacts = summary["artifacts"]
+    assert {"equity_curve", "momentum_heatmap", "trade_timeline"} <= artifacts.keys()
+    for rel_path in artifacts.values():
+        artifact_path = tmp_path / rel_path
+        assert artifact_path.exists(), f"expected artifact at {artifact_path}"
+
     log_lines = log_path.read_text(encoding="utf-8").strip().splitlines()
     assert log_lines, "telemetry log should contain at least one event"
     envelopes = [json.loads(line) for line in log_lines]
     run_completed = next((env for env in envelopes if env.get("event_type") == "run_completed"), None)
     assert run_completed is not None, "run_completed event missing from telemetry log"
     assert run_completed["payload"]["parameter_path"] == summary["parameter_path"]
+    snapshot = next((env for env in envelopes if env.get("event_type") == "best_candidate_snapshot"), None)
+    assert snapshot is not None, "best_candidate_snapshot event missing from telemetry log"
+    assert snapshot["payload"]["artifacts"] == artifacts
 
 
 def test_live_tail_streams_candidate_events(tmp_path: Path) -> None:

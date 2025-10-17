@@ -4,15 +4,20 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="3a0f8e7c-00d9-4699-9f00-5cef80cd1d44" name="Changes" comment="working heatmap. neeed to remaeke trade graph">
+    <list default="true" id="3a0f8e7c-00d9-4699-9f00-5cef80cd1d44" name="Changes" comment="finished task T023">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/specs/003-the-model-builder/tasks.md" beforeDir="false" afterPath="$PROJECT_DIR$/specs/003-the-model-builder/tasks.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/engine/backtest.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/backtest.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/model_builder/analytics/trade_timeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model_builder/analytics/trade_timeline.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/model_builder/cli/model_builder.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model_builder/cli/model_builder.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model_builder/optimization/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model_builder/optimization/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model_builder/optimization/telemetry.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model_builder/optimization/telemetry.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/model_builder/ui/components/candidate_summary.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model_builder/ui/components/candidate_summary.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/contracts.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/contracts.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/optimizer/workflow.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/optimizer/workflow.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/storage/layout.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/storage/layout.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/model_builder/analytics/test_trade_timeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/model_builder/analytics/test_trade_timeline.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/model_builder/cli/test_model_builder_cli.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/model_builder/cli/test_model_builder_cli.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/model_builder/ui/test_candidate_summary.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/model_builder/ui/test_candidate_summary.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -85,7 +90,7 @@
       <workItem from="1760113324627" duration="17118000" />
       <workItem from="1760359549779" duration="2314000" />
       <workItem from="1760361881445" duration="34908000" />
-      <workItem from="1760462003973" duration="1253000" />
+      <workItem from="1760462003973" duration="17848000" />
     </task>
     <task id="LOCAL-00001" summary="Project Created">
       <option name="closed" value="true" />
@@ -191,7 +196,15 @@
       <option name="project" value="LOCAL" />
       <updated>1760391571817</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="finished task T023">
+      <option name="closed" value="true" />
+      <created>1760543015854</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1760543015854</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -221,6 +234,7 @@
     <MESSAGE value="model builder - Phase 4 partially implemented" />
     <MESSAGE value="working portfolio equity graph" />
     <MESSAGE value="working heatmap. neeed to remaeke trade graph" />
-    <option name="LAST_COMMIT_MESSAGE" value="working heatmap. neeed to remaeke trade graph" />
+    <MESSAGE value="finished task T023" />
+    <option name="LAST_COMMIT_MESSAGE" value="finished task T023" />
   </component>
 </project>

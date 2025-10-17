@@ -79,6 +79,7 @@ class TradeRecord:
     costs: Dict[str, float]
     exit_timestamp: Optional[str]
     pnl: float
+    entry_timestamp: Optional[str] = None
 
 
 @dataclass

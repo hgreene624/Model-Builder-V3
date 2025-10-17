@@ -97,11 +97,11 @@ Manual verification only; no new automated tests planned in this phase.
 
 ### Implementation for User Story 3
 
-- [ ] T027 [US3] Implement momentum heatmap builder in `src/model_builder/analytics/heatmap_builder.py` supporting 5/10/20/60-day intervals with narrative text.
+- [X] T027 [US3] Implement momentum heatmap builder in `src/model_builder/analytics/heatmap_builder.py` supporting 5/10/20/60-day intervals with narrative text.
 - [X] T028 [US3] Implement trade timeline transformer in `src/model_builder/analytics/trade_timeline.py` sizing bubbles by notional and color-coding P&L.
 - [X] T029 [US3] Implement best candidate presenter in `src/model_builder/ui/components/candidate_summary.py` combining callout, equity curve chart, heatmap, and timeline.
-- [ ] T030 [US3] Update `model_builder_page.py` to pin best candidate visuals in `st.session_state` and restore them after reruns.
-- [ ] T031 [US3] Extend telemetry/log schema in `model_builder/optimization/telemetry.py` to include references to equity curve and visual artifacts for replay (align with FR-016).
+- [X] T030 [US3] Update `model_builder_page.py` to pin best candidate visuals in `st.session_state` and restore them after reruns.
+- [X] T031 [US3] Extend telemetry/log schema in `model_builder/optimization/telemetry.py` to include references to equity curve and visual artifacts for replay (align with FR-016).
 
 **Checkpoint**: All user stories independently functional.
 

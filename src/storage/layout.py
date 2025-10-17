@@ -81,3 +81,12 @@ class StorageLayout:
 
     def evaluation_log_path(self, run_id: str) -> Path:
         return self._ensure_parent(self.evaluations_directory() / f"{run_id}.jsonl")
+
+    def evaluation_run_directory(self, run_id: str) -> Path:
+        path = self.evaluations_directory() / run_id
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+
+    def evaluation_artifact_path(self, run_id: str, name: str, suffix: str) -> Path:
+        filename = f"{name}{suffix}"
+        return self._ensure_parent(self.evaluation_run_directory(run_id) / filename)

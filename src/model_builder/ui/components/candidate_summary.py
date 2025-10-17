@@ -323,28 +323,54 @@ def _build_timeline_figure(timeline: Dict[str, Any]) -> go.Figure:
     points = timeline.get("points") or []
     if not points:
         fig.update_layout(margin=dict(l=0, r=0, t=10, b=0))
+        fig.update_xaxes(title="Date", type="date")
+        fig.update_yaxes(title="Symbol")
+        window_start = timeline.get("window_start")
+        window_end = timeline.get("window_end")
+        if window_start and window_end:
+            fig.update_xaxes(range=[pd.to_datetime(window_start), pd.to_datetime(window_end)])
         return fig
 
     frame = pd.DataFrame(points)
+    from plotly import colors as plotly_colors
     frame["entry"] = pd.to_datetime(frame["entry"])
     frame["exit"] = pd.to_datetime(frame["exit"])
     frame["return_pct"] = frame["return_pct"].astype(float)
-    frame["bar_width"] = frame["bar_width"].astype(float)
-    frame["size_fraction"] = frame["size_fraction"].astype(float)
-    frame["duration_days"] = frame["duration_days"].astype(float)
+    frame["size_fraction"] = frame.get("size_fraction", pd.Series(0.0, index=frame.index)).astype(float)
+    frame["duration_days"] = frame.get("duration_days", pd.Series(0.0, index=frame.index)).astype(float)
 
     return_series = frame["return_pct"].fillna(0.0)
     color_domain = timeline.get("color_domain")
     if color_domain is None or color_domain <= 0:
         color_domain = max(1.0, return_series.abs().max())
+    color_scale = timeline.get("color_scale", "RdYlGn")
 
-    hover_text: List[str] = []
+    symbols = list(dict.fromkeys(frame["symbol"]))
+    symbol_to_idx = {symbol: idx for idx, symbol in enumerate(symbols)}
+
+    def _height(fraction: float) -> float:
+        fraction = float(fraction if pd.notna(fraction) else 0.0)
+        return max(0.2, min(0.9, fraction * 0.8 + 0.2))
+
+    def _color(value: float) -> str:
+        normalized = 0.5 if color_domain == 0 else (value + color_domain) / (2 * color_domain)
+        normalized = max(0.0, min(1.0, normalized))
+        return plotly_colors.sample_colorscale(color_scale, [normalized])[0]
+
     for row in frame.itertuples():
         metadata = row.metadata or {}
         formatted_return = "n/a" if pd.isna(row.return_pct) else f"{row.return_pct:.2f}%"
-        actual_entry = row.metadata.get("entry_actual", row.entry.isoformat()) if isinstance(row.metadata, dict) else row.entry.isoformat()
-        actual_exit = row.metadata.get("exit_actual", row.exit.isoformat()) if isinstance(row.metadata, dict) else row.exit.isoformat()
-        lines = [
+        actual_entry = (
+            row.metadata.get("entry_actual", row.entry.isoformat())
+            if isinstance(row.metadata, dict)
+            else row.entry.isoformat()
+        )
+        actual_exit = (
+            row.metadata.get("exit_actual", row.exit.isoformat())
+            if isinstance(row.metadata, dict)
+            else row.exit.isoformat()
+        )
+        hover_lines = [
             f"Symbol={row.symbol}",
             f"Entry (holdout)={row.entry:%Y-%m-%d %H:%M:%S}",
             f"Exit (holdout)={row.exit:%Y-%m-%d %H:%M:%S}",
@@ -357,65 +383,89 @@ def _build_timeline_figure(timeline: Dict[str, Any]) -> go.Figure:
             f"Notional={row.notional:,.2f}",
         ]
         if row.portfolio_notional is not None:
-            lines.append(f"Portfolio Notional={row.portfolio_notional:,.2f}")
+            hover_lines.append(f"Portfolio Notional={row.portfolio_notional:,.2f}")
         weight_pct = metadata.get("portfolio_weight_pct")
         if weight_pct is not None:
-            lines.append(f"Weight={float(weight_pct):.2f}%")
+            hover_lines.append(f"Weight={float(weight_pct):.2f}%")
         weight_fraction = metadata.get("portfolio_weight")
         if weight_fraction is not None:
-            lines.append(f"Weight Fraction={float(weight_fraction):.4f}")
+            hover_lines.append(f"Weight Fraction={float(weight_fraction):.4f}")
         risk_reward = metadata.get("risk_reward")
         if risk_reward is not None:
-            lines.append(f"Risk/Reward={risk_reward}")
+            hover_lines.append(f"Risk/Reward={risk_reward}")
         mae = metadata.get("max_adverse_excursion")
         if mae is not None:
-            lines.append(f"Max Adverse Excursion={mae}")
+            hover_lines.append(f"Max Adverse Excursion={mae}")
         mfe = metadata.get("max_favorable_excursion")
         if mfe is not None:
-            lines.append(f"Max Favorable Excursion={mfe}")
+            hover_lines.append(f"Max Favorable Excursion={mfe}")
         size_fraction = metadata.get("size_fraction")
         if size_fraction is not None:
-            lines.append(f"Size Fraction={float(size_fraction):.2f}")
-        hover_text.append("<br>".join(lines))
+            hover_lines.append(f"Size Fraction={float(size_fraction):.2f}")
+        hover_text = "<br>".join(hover_lines)
 
+        center = symbol_to_idx[row.symbol]
+        height = _height(row.size_fraction)
+        y0 = center - height / 2
+        y1 = center + height / 2
+        color = _color(0.0 if pd.isna(row.return_pct) else float(row.return_pct))
+
+        fig.add_trace(
+            go.Scatter(
+                x=[row.entry, row.exit, row.exit, row.entry, row.entry],
+                y=[y0, y0, y1, y1, y0],
+                mode="lines",
+                fill="toself",
+                line=dict(width=0),
+                fillcolor=color,
+                hovertext=hover_text,
+                hoverinfo="text",
+                showlegend=False,
+            )
+        )
+
+    # Invisible marker to keep colorscale legend
     fig.add_trace(
-        go.Bar(
-            y=frame["symbol"],
-            x=(frame["exit"] - frame["entry"]),
-            base=frame["entry"],
-            orientation="h",
+        go.Scatter(
+            x=[frame["exit"].max()],
+            y=[symbol_to_idx[symbols[0]] if symbols else 0],
+            mode="markers",
             marker=dict(
-                color=frame["return_pct"],
-                coloraxis="coloraxis",
+                size=0.1,
+                color=[color_domain],
+                colorscale=color_scale,
+                cmin=-color_domain,
+                cmax=color_domain,
+                showscale=True,
+                colorbar=dict(title="Return (%)"),
             ),
-            width=frame["bar_width"],
-            hovertemplate="%{text}<extra></extra>",
-            text=hover_text,
+            hoverinfo="skip",
+            showlegend=False,
         )
     )
 
-    fig.update_layout(
-        margin=dict(l=0, r=0, t=10, b=0),
-        coloraxis=dict(
-            colorscale=timeline.get("color_scale", "RdYlGn"),
-            cmin=-color_domain,
-            cmax=color_domain,
-            colorbar=dict(title="Return (%)"),
-        ),
-        title="Holdout trade timeline",
-        showlegend=False,
-    )
     window_start = timeline.get("window_start")
     window_end = timeline.get("window_end")
     xaxis_kwargs: Dict[str, Any] = {"title": "Date", "type": "date"}
     if window_start and window_end:
-        xaxis_kwargs["range"] = [window_start, window_end]
-    fig.update_xaxes(**xaxis_kwargs)
-    fig.update_yaxes(title="Symbol", autorange="reversed")
+        start_ts = pd.to_datetime(window_start)
+        end_ts = pd.to_datetime(window_end)
+        xaxis_kwargs["range"] = [start_ts, end_ts]
 
     fig.update_layout(
-        bargap=0.2,
+        margin=dict(l=0, r=0, t=10, b=0),
+        title="Holdout trade timeline",
+        showlegend=False,
     )
+    fig.update_xaxes(**xaxis_kwargs)
+    fig.update_yaxes(
+        title="Symbol",
+        tickmode="array",
+        tickvals=list(symbol_to_idx.values()),
+        ticktext=symbols,
+        autorange="reversed",
+    )
+
     return fig
 
 
