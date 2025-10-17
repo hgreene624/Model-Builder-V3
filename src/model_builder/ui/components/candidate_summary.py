@@ -492,14 +492,64 @@ def render_best_candidate(view: BestCandidateView) -> None:
         st.caption("Run Stats")
         st.dataframe(stats_frame.set_index("Stat"), use_container_width=True)
 
+    # Toggle for window selection
+    show_full_window = st.toggle("Show Full Training + Holdout Window", value=False, key=f"window_toggle_{view.run_id}")
+
+    # Determine window boundaries
+    if show_full_window:
+        # Full training + holdout
+        window_start = view.coverage.get("warmup_start") or view.coverage.get("train_start")
+        window_end = view.coverage.get("holdout_start")
+        # Get holdout end from last equity point if available
+        if view.holdout_equity:
+            window_end = view.holdout_equity[-1]["timestamp"]
+        # Combine training and holdout equity for analytics
+        all_equity_points = view.training_equity + view.holdout_equity
+        equity_series = pd.Series(dtype=float)
+        if all_equity_points:
+            equity_series = pd.Series(
+                data=[point["equity"] for point in all_equity_points],
+                index=pd.to_datetime([point["timestamp"] for point in all_equity_points]),
+                dtype=float,
+            )
+    else:
+        # Holdout only (default)
+        window_start = view.coverage.get("holdout_start")
+        window_end = None
+        if view.holdout_equity:
+            window_end = view.holdout_equity[-1]["timestamp"]
+        equity_series = pd.Series(dtype=float)
+        if view.holdout_equity:
+            equity_series = pd.Series(
+                data=[point["equity"] for point in view.holdout_equity],
+                index=pd.to_datetime([point["timestamp"] for point in view.holdout_equity]),
+                dtype=float,
+            )
+
     equity_fig = _build_equity_figure(view)
+    if show_full_window and window_start and window_end:
+        equity_fig.update_xaxes(range=[pd.to_datetime(window_start), pd.to_datetime(window_end)])
+    elif not show_full_window and window_start and window_end:
+        equity_fig.update_xaxes(range=[pd.to_datetime(window_start), pd.to_datetime(window_end)])
     st.plotly_chart(equity_fig, use_container_width=True)
 
-    heatmap_fig = _build_heatmap_figure(view.heatmap)
+    # Rebuild heatmap with selected window
+    from model_builder.analytics import build_momentum_heatmap
+    heatmap_data = build_momentum_heatmap(equity_series)
+    heatmap_fig = _build_heatmap_figure(heatmap_data.to_dict())
     st.plotly_chart(heatmap_fig, use_container_width=True)
-    st.caption(view.heatmap.get("narrative", ""))
+    st.caption(heatmap_data.to_dict().get("narrative", ""))
 
+    # Rebuild timeline with selected window - need to get trades from result
+    # For now, use the existing timeline but update the window range
+    from model_builder.analytics import build_trade_timeline
+    # We need access to the full trades list, but it's not in the view
+    # For now, just update the x-axis range
     timeline_fig = _build_timeline_figure(view.timeline)
+    if show_full_window and window_start and window_end:
+        timeline_fig.update_xaxes(range=[pd.to_datetime(window_start), pd.to_datetime(window_end)])
+    elif not show_full_window and window_start and window_end:
+        timeline_fig.update_xaxes(range=[pd.to_datetime(window_start), pd.to_datetime(window_end)])
     st.plotly_chart(timeline_fig, use_container_width=True)
     if not view.timeline.get("points"):
         st.caption("No trades executed within the selected window.")
