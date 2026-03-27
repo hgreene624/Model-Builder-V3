@@ -8,10 +8,10 @@ import pytest
 from typer.testing import CliRunner
 
 from src.cli.main import app
-from src.portfolio.services import build_portfolio
 from src.data.cache import MarketDataCache
 from src.data.loader import MarketDataLoader, SymbolDiagnostics
 from src.models.contracts import Portfolio
+from src.portfolio.services import build_portfolio
 from src.storage.artifacts import ArtifactStore
 from src.storage.layout import StorageLayout
 
@@ -124,7 +124,12 @@ def test_cli_curate_with_universe(monkeypatch: pytest.MonkeyPatch, tmp_path: Pat
         "name": "Sample Universe",
         "symbols": [
             {"ticker": "AAA", "name": "Alpha Tech", "sector": "Technology", "industry": "Software"},
-            {"ticker": "BBB", "name": "Beta Utilities", "sector": "Utilities", "industry": "Electric"},
+            {
+                "ticker": "BBB",
+                "name": "Beta Utilities",
+                "sector": "Utilities",
+                "industry": "Electric",
+            },
         ],
     }
     (universe_dir / "sample.json").write_text(json.dumps(universe_payload))
@@ -136,7 +141,9 @@ def test_cli_curate_with_universe(monkeypatch: pytest.MonkeyPatch, tmp_path: Pat
             volume = [1_500_000 for _ in range(5)]
             return pd.DataFrame({"close": close, "volume": volume}, index=index)
 
-        def load(self, symbol: str, start: str, end: str, *, interval: str, warmup_bars: int) -> pd.DataFrame:
+        def load(
+            self, symbol: str, start: str, end: str, *, interval: str, warmup_bars: int
+        ) -> pd.DataFrame:
             return self._frame(symbol)
 
         def load_with_diagnostics(

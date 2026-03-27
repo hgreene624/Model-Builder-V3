@@ -3,8 +3,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
 from src.optimizer.telemetry import TelemetryPublisher
 from src.optimizer.training_logger import TrainingLogger
 

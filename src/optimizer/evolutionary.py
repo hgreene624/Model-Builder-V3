@@ -1,21 +1,20 @@
 from __future__ import annotations
 
 import json
-import math
 import random
 import time
 import uuid
+from collections.abc import Callable, Iterable, Sequence
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
-from typing import Callable, Dict, Iterable, List, Sequence
+from datetime import UTC, datetime
 
 from src.models.contracts import ParameterSet
 from src.optimizer.telemetry import TelemetryPublisher
 from src.storage.layout import StorageLayout
 
-EvaluationFn = Callable[[Dict[str, float]], Dict[str, Dict[str, float]]]
-MutateFn = Callable[[Dict[str, float], random.Random], Dict[str, float]]
+EvaluationFn = Callable[[dict[str, float]], dict[str, dict[str, float]]]
+MutateFn = Callable[[dict[str, float], random.Random], dict[str, float]]
 
 
 @dataclass(frozen=True)
@@ -36,10 +35,10 @@ class ObjectiveWeights:
         object.__setattr__(self, "_normalised", normalised)  # type: ignore[call-arg]
 
     @property
-    def normalised(self) -> Dict[str, float]:
+    def normalised(self) -> dict[str, float]:
         return self._normalised  # type: ignore[attr-defined]
 
-    def score(self, metrics: Dict[str, float]) -> float:
+    def score(self, metrics: dict[str, float]) -> float:
         return sum(metrics.get(name, 0.0) * weight for name, weight in self.normalised.items())
 
 
@@ -47,7 +46,7 @@ class ObjectiveWeights:
 class GateResult:
     passed: bool
     penalty: float
-    reasons: List[str]
+    reasons: list[str]
 
 
 @dataclass(frozen=True)
@@ -56,8 +55,8 @@ class ConstraintGate:
     min_hold_days: float
     penalty: float
 
-    def evaluate(self, stats: Dict[str, float]) -> GateResult:
-        reasons: List[str] = []
+    def evaluate(self, stats: dict[str, float]) -> GateResult:
+        reasons: list[str] = []
         trade_rate = stats.get("trade_rate")
         hold_days = stats.get("avg_hold_days")
 
@@ -73,13 +72,13 @@ class ConstraintGate:
 
 @dataclass(frozen=True)
 class CandidateScore:
-    parameters: Dict[str, float]
-    metrics: Dict[str, float]
-    stats: Dict[str, float]
+    parameters: dict[str, float]
+    metrics: dict[str, float]
+    stats: dict[str, float]
     score: float
     adjusted_score: float
     penalty: float
-    reasons: List[str]
+    reasons: list[str]
 
 
 class EvolutionaryOptimizer:
@@ -96,6 +95,7 @@ class EvolutionaryOptimizer:
         generations: int,
         max_workers: int = 1,
         mutate_fn: MutateFn | None = None,
+        candidate_event_sink: Callable[[dict], None] | None = None,
     ) -> None:
         if population_size <= 0:
             raise ValueError("population_size must be positive")
@@ -112,6 +112,7 @@ class EvolutionaryOptimizer:
         self.generations = generations
         self.max_workers = max_workers
         self.mutate_fn = mutate_fn
+        self._candidate_event_sink = candidate_event_sink
 
     def run(
         self,
@@ -120,7 +121,7 @@ class EvolutionaryOptimizer:
         model_id: str,
         portfolio_id: str,
         evaluator: EvaluationFn,
-        initial_population: Sequence[Dict[str, float]],
+        initial_population: Sequence[dict[str, float]],
         seed: int | None = None,
     ) -> ParameterSet:
         if len(initial_population) < self.population_size:
@@ -143,7 +144,12 @@ class EvolutionaryOptimizer:
         best_record: CandidateScore | None = None
 
         for generation in range(1, self.generations + 1):
-            records = self._evaluate_population(population, evaluator)
+            records = self._evaluate_population(
+                run_id=run_id,
+                generation=generation,
+                population=population,
+                evaluator=evaluator,
+            )
             records.sort(key=lambda item: item.adjusted_score, reverse=True)
 
             generation_best = records[0]
@@ -194,22 +200,74 @@ class EvolutionaryOptimizer:
 
         return parameter_set
 
-    def _evaluate_population(self, population: Sequence[Dict[str, float]], evaluator: EvaluationFn) -> List[CandidateScore]:
-        records: List[CandidateScore] = []
+    def _evaluate_population(
+        self,
+        *,
+        run_id: str,
+        generation: int,
+        population: Sequence[dict[str, float]],
+        evaluator: EvaluationFn,
+    ) -> list[CandidateScore]:
+        records: list[CandidateScore] = []
 
         if self.max_workers > 1:
             with ProcessPoolExecutor(max_workers=self.max_workers) as executor:
-                for genome, outcome in zip(population, executor.map(evaluator, population), strict=False):
-                    records.append(self._build_record(dict(genome), outcome))
+                for index, (genome, outcome) in enumerate(
+                    zip(population, executor.map(evaluator, population), strict=False), start=1
+                ):
+                    record = self._build_record(dict(genome), outcome)
+                    records.append(record)
+                    self._emit_candidate_event(
+                        run_id=run_id,
+                        generation=generation,
+                        index=index,
+                        record=record,
+                    )
             return records
 
-    # In sequential mode --------------------------------------------------
-        for genome in population:
+        # In sequential mode --------------------------------------------------
+        for index, genome in enumerate(population, start=1):
             outcome = evaluator(genome)
-            records.append(self._build_record(dict(genome), outcome))
+            record = self._build_record(dict(genome), outcome)
+            records.append(record)
+            self._emit_candidate_event(
+                run_id=run_id,
+                generation=generation,
+                index=index,
+                record=record,
+            )
         return records
 
-    def _build_record(self, genome: Dict[str, float], outcome: Dict[str, Dict[str, float]]) -> CandidateScore:
+    def _emit_candidate_event(
+        self,
+        *,
+        run_id: str,
+        generation: int,
+        index: int,
+        record: CandidateScore,
+    ) -> None:
+        if self._candidate_event_sink is None:
+            return
+        candidate_id = f"{run_id}-g{generation:03d}-c{index:03d}"
+        payload = {
+            "candidate_id": candidate_id,
+            "score": record.adjusted_score,
+            "raw_score": record.score,
+            "metrics": record.metrics,
+            "parameters": record.parameters,
+            "stats": record.stats,
+            "penalty": record.penalty,
+            "generation": generation,
+            "rank": index,
+        }
+        try:
+            self._candidate_event_sink(payload)
+        except Exception:  # pragma: no cover - defensive
+            pass
+
+    def _build_record(
+        self, genome: dict[str, float], outcome: dict[str, dict[str, float]]
+    ) -> CandidateScore:
         metrics = dict(outcome.get("metrics") or {})
         stats = dict(outcome.get("stats") or {})
         score = self.objective_weights.score(metrics)
@@ -225,10 +283,12 @@ class EvolutionaryOptimizer:
             reasons=gate.reasons,
         )
 
-    def _next_population(self, records: Sequence[CandidateScore], rng: random.Random) -> List[Dict[str, float]]:
+    def _next_population(
+        self, records: Sequence[CandidateScore], rng: random.Random
+    ) -> list[dict[str, float]]:
         elite_count = max(1, self.population_size // 3)
         elites = [dict(records[i].parameters) for i in range(elite_count)]
-        offspring: List[Dict[str, float]] = list(elites)
+        offspring: list[dict[str, float]] = list(elites)
 
         while len(offspring) < self.population_size:
             parent = rng.choice(elites)
@@ -239,8 +299,8 @@ class EvolutionaryOptimizer:
 
         return self._apply_bounds(offspring[: self.population_size])
 
-    def _apply_bounds(self, population: Iterable[Dict[str, float]]) -> List[Dict[str, float]]:
-        adjusted: List[Dict[str, float]] = []
+    def _apply_bounds(self, population: Iterable[dict[str, float]]) -> list[dict[str, float]]:
+        adjusted: list[dict[str, float]] = []
         for genome in population:
             adjusted.append({key: float(value) for key, value in genome.items()})
         return adjusted
@@ -262,7 +322,7 @@ class EvolutionaryOptimizer:
             parameters=dict(record.parameters),
             fitness={"score": record.adjusted_score, **record.metrics},
             constraints=dict(record.stats),
-            created_at=datetime.now(tz=timezone.utc).isoformat(),
+            created_at=datetime.now(tz=UTC).isoformat(),
         )
 
         path = self.layout.parameter_set_path(parameter_set_id)

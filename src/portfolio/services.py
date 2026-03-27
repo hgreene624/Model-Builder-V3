@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from typing import Dict, Iterable, List, Optional
+from datetime import UTC, datetime
 
 import pandas as pd
 
@@ -13,17 +13,17 @@ from src.models.contracts import Portfolio
 
 @dataclass
 class PortfolioPreview:
-    tickers: List[str]
+    tickers: list[str]
     table: pd.DataFrame
-    stats: Dict[str, float]
-    diagnostics: List[SymbolDiagnostics] | None = None
+    stats: dict[str, float]
+    diagnostics: list[SymbolDiagnostics] | None = None
 
 
 def normalize_symbol(symbol: str) -> str:
     return symbol.strip().upper()
 
 
-def normalize_symbols(symbols: Iterable[str]) -> List[str]:
+def normalize_symbols(symbols: Iterable[str]) -> list[str]:
     seen = set()
     result = []
     for symbol in symbols:
@@ -40,10 +40,10 @@ def normalize_portfolio_id(name: str) -> str:
     return slug or "portfolio"
 
 
-def _clean_filters(filters: Dict[str, object] | None) -> Dict[str, object]:
+def _clean_filters(filters: dict[str, object] | None) -> dict[str, object]:
     if not filters:
         return {}
-    cleaned: Dict[str, object] = {}
+    cleaned: dict[str, object] = {}
     for key, value in filters.items():
         if value is None:
             continue
@@ -70,11 +70,11 @@ def apply_filters(
     *,
     include_substring: str | None = None,
     exclude_substring: str | None = None,
-) -> List[str]:
+) -> list[str]:
     include = include_substring.lower().strip() if include_substring else None
     exclude = exclude_substring.lower().strip() if exclude_substring else None
 
-    filtered: List[str] = []
+    filtered: list[str] = []
     for symbol in symbols:
         candidate = normalize_symbol(symbol)
         if include and include not in candidate.lower():
@@ -91,13 +91,15 @@ def compute_liquidity_table(
     start: str,
     end: str,
     *,
-    diagnostics: Optional[List[SymbolDiagnostics]] = None,
+    diagnostics: list[SymbolDiagnostics] | None = None,
 ) -> pd.DataFrame:
     rows = []
     for symbol in symbols:
         try:
             if diagnostics is not None:
-                frame, diag, error = loader.load_with_diagnostics(symbol, start, end, interval="1d", warmup_bars=0)
+                frame, diag, error = loader.load_with_diagnostics(
+                    symbol, start, end, interval="1d", warmup_bars=0
+                )
                 diagnostics.append(diag)
                 if error is not None or diag.exception_message:
                     continue
@@ -120,7 +122,7 @@ def compute_liquidity_table(
     return pd.DataFrame(rows)
 
 
-def summarize_stats(table: pd.DataFrame) -> Dict[str, float]:
+def summarize_stats(table: pd.DataFrame) -> dict[str, float]:
     if table.empty:
         return {
             "median_price": 0.0,
@@ -146,11 +148,11 @@ def build_portfolio(
     coverage_end: str,
     loader: MarketDataLoader,
     notes: list[str] | None = None,
-    filters: Dict[str, object] | None = None,
+    filters: dict[str, object] | None = None,
     debug: bool = False,
 ) -> tuple[Portfolio, PortfolioPreview]:
     normalized = normalize_symbols(symbols)[:max_count]
-    diagnostics: List[SymbolDiagnostics] | None = [] if debug else None
+    diagnostics: list[SymbolDiagnostics] | None = [] if debug else None
     table = compute_liquidity_table(
         loader, normalized, coverage_start, coverage_end, diagnostics=diagnostics
     )
@@ -163,7 +165,7 @@ def build_portfolio(
         "coverage_gap_count": stats.get("coverage_gap_count", 0),
     }
 
-    timestamp = datetime.now(tz=timezone.utc).isoformat()
+    timestamp = datetime.now(tz=UTC).isoformat()
 
     portfolio = Portfolio(
         portfolio_id=normalize_portfolio_id(name or "portfolio"),
@@ -182,5 +184,7 @@ def build_portfolio(
         updated_at=timestamp,
     )
 
-    preview = PortfolioPreview(tickers=normalized, table=table, stats=stats, diagnostics=diagnostics)
+    preview = PortfolioPreview(
+        tickers=normalized, table=table, stats=stats, diagnostics=diagnostics
+    )
     return portfolio, preview

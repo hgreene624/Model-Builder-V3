@@ -1,20 +1,22 @@
 from __future__ import annotations
 
-from typing import Dict, Iterable, Tuple
-
 import pandas as pd
 import pytest
 
 from src.data.loader import SymbolDiagnostics
-from src.portfolio.liquidity import COVERAGE_COMPLETENESS_THRESHOLD, fetch_liquidity
+from src.portfolio.liquidity import fetch_liquidity
 
 
 class StubLoader:
-    def __init__(self, frames: Dict[str, pd.DataFrame], errors: Dict[str, Exception] | None = None) -> None:
+    def __init__(
+        self, frames: dict[str, pd.DataFrame], errors: dict[str, Exception] | None = None
+    ) -> None:
         self.frames = frames
         self.errors = errors or {}
 
-    def load_with_diagnostics(self, symbol: str, start: str, end: str, *, interval: str, warmup_bars: int):
+    def load_with_diagnostics(
+        self, symbol: str, start: str, end: str, *, interval: str, warmup_bars: int
+    ):
         diagnostics = SymbolDiagnostics(
             symbol=symbol,
             start=start,

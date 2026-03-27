@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 from typer.testing import CliRunner
 
-from src.cli.main import app
 from src.cli import portfolio_cli
-from src.data.loader import MarketDataLoader
+from src.cli.main import app
 from src.data.cache import MarketDataCache
+from src.data.loader import MarketDataLoader
 
 
 def seed_csv(tmp_path: Path, symbols: list[str]) -> Path:
@@ -19,7 +18,9 @@ def seed_csv(tmp_path: Path, symbols: list[str]) -> Path:
 
 def test_portfolio_cli_requires_source(tmp_path: Path) -> None:
     runner = CliRunner()
-    result = runner.invoke(app, ["portfolio", "curate"], env={"DATA_DIR": str(tmp_path / "storage")})
+    result = runner.invoke(
+        app, ["portfolio", "curate"], env={"DATA_DIR": str(tmp_path / "storage")}
+    )
     assert result.exit_code != 0
     assert "Provide a universe" in result.stdout
 
@@ -53,7 +54,14 @@ def test_portfolio_cli_saves(tmp_path: Path, monkeypatch) -> None:
 
         rows = []
         for symbol in symbols:
-            rows.append({"symbol": symbol, "median_price": 1.0, "median_dollar_volume": 2.0, "observations": 3})
+            rows.append(
+                {
+                    "symbol": symbol,
+                    "median_price": 1.0,
+                    "median_dollar_volume": 2.0,
+                    "observations": 3,
+                }
+            )
         if diagnostics is not None:
             diagnostics.extend([])
         return pd.DataFrame(rows)
@@ -61,7 +69,11 @@ def test_portfolio_cli_saves(tmp_path: Path, monkeypatch) -> None:
     services.compute_liquidity_table = stub_table
 
     def stub_loader(settings):
-        return MarketDataLoader(cache=MarketDataCache(root=tmp_path / "cache"), providers={"stub": lambda: fake_fetch}, default_provider="stub")
+        return MarketDataLoader(
+            cache=MarketDataCache(root=tmp_path / "cache"),
+            providers={"stub": lambda: fake_fetch},
+            default_provider="stub",
+        )
 
     monkeypatch.setattr(portfolio_cli, "_build_loader", stub_loader)
 

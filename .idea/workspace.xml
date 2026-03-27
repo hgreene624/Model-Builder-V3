@@ -4,23 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="3a0f8e7c-00d9-4699-9f00-5cef80cd1d44" name="Changes" comment="Home.py framework set up. Phase 3 done">
-      <change afterPath="$PROJECT_DIR$/src/cli/portfolio_cli.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/portfolio/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/portfolio/seeds.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/portfolio/services.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/integration/test_portfolio_save.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/unit/test_portfolio_builder.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/unit/test_portfolio_cli.py" afterDir="false" />
+    <list default="true" id="3a0f8e7c-00d9-4699-9f00-5cef80cd1d44" name="Changes" comment="phase 6 done">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pages/1_Portfolio_Curator.py" beforeDir="false" afterPath="$PROJECT_DIR$/pages/1_Portfolio_Curator.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/specs/001-build-a-self/tasks.md" beforeDir="false" afterPath="$PROJECT_DIR$/specs/001-build-a-self/tasks.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cli/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/cli/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/config/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/config/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/data/loader.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/loader.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/data/providers/alpaca_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/providers/alpaca_client.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/unit/test_loader.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/test_loader.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/unit/test_settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/test_settings.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -35,41 +20,62 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "hgreene624"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;hgreene624&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/hgreene624/Model-Builder-V3.git",
-    "accountId": "1e92545f-1488-456d-bba4-9ce5a4ab4895"
+}</component>
+  <component name="GitHubPullRequestState">{
+  &quot;prStates&quot;: [
+    {
+      &quot;id&quot;: {
+        &quot;id&quot;: &quot;PR_kwDOQADYLM6uWjv3&quot;,
+        &quot;number&quot;: 2
+      },
+      &quot;lastSeen&quot;: 1760721733827
+    }
+  ]
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/hgreene624/Model-Builder-V3.git&quot;,
+    &quot;accountId&quot;: &quot;1e92545f-1488-456d-bba4-9ce5a4ab4895&quot;
+  },
+  &quot;recentNewPullRequestHead&quot;: {
+    &quot;server&quot;: {
+      &quot;useHttp&quot;: false,
+      &quot;host&quot;: &quot;github.com&quot;,
+      &quot;port&quot;: null,
+      &quot;suffix&quot;: null
+    },
+    &quot;owner&quot;: &quot;hgreene624&quot;,
+    &quot;repository&quot;: &quot;Model-Builder-V3&quot;
   }
-}]]></component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 6
-}]]></component>
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6
+}</component>
   <component name="ProjectId" id="33skmCrIBe587mQQwJsbAXTcFSF" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "001-build-a-self",
-    "last_opened_file_path": "/Users/holdengreene/PycharmProjects/Model Builder V3",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;#3 on 003-the-model-builder&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/holdengreene/PycharmProjects/Model Builder V3&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
@@ -91,6 +97,11 @@
       <option name="presentableId" value="Default" />
       <updated>1760113323568</updated>
       <workItem from="1760113324627" duration="17118000" />
+      <workItem from="1760359549779" duration="2314000" />
+      <workItem from="1760361881445" duration="34908000" />
+      <workItem from="1760462003973" duration="18095000" />
+      <workItem from="1760717314765" duration="7184000" />
+      <workItem from="1762791463366" duration="640000" />
     </task>
     <task id="LOCAL-00001" summary="Project Created">
       <option name="closed" value="true" />
@@ -172,11 +183,118 @@
       <option name="project" value="LOCAL" />
       <updated>1760127537604</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="model builder - Phase 4 partially implemented">
+      <option name="closed" value="true" />
+      <created>1760366980786</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1760366980786</updated>
+    </task>
+    <task id="LOCAL-00012" summary="working portfolio equity graph">
+      <option name="closed" value="true" />
+      <created>1760388191826</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1760388191826</updated>
+    </task>
+    <task id="LOCAL-00013" summary="working heatmap. neeed to remaeke trade graph">
+      <option name="closed" value="true" />
+      <created>1760391571817</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1760391571817</updated>
+    </task>
+    <task id="LOCAL-00014" summary="finished task T023">
+      <option name="closed" value="true" />
+      <created>1760543015854</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1760543015854</updated>
+    </task>
+    <task id="LOCAL-00015" summary="Working trades graph">
+      <option name="closed" value="true" />
+      <created>1760717261372</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1760717261372</updated>
+    </task>
+    <task id="LOCAL-00016" summary="reformatting of model builder dashboard">
+      <option name="closed" value="true" />
+      <created>1760718263969</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1760718263969</updated>
+    </task>
+    <task id="LOCAL-00017" summary="reformatting of model builder dashboard">
+      <option name="closed" value="true" />
+      <created>1760718268059</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1760718268059</updated>
+    </task>
+    <task id="LOCAL-00018" summary="model builder dashboard date range toggle">
+      <option name="closed" value="true" />
+      <created>1760718484151</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1760718484151</updated>
+    </task>
+    <task id="LOCAL-00019" summary="working graphs, need spacing adjustment">
+      <option name="closed" value="true" />
+      <created>1760718844070</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1760718844070</updated>
+    </task>
+    <task id="LOCAL-00020" summary="working graphs">
+      <option name="closed" value="true" />
+      <created>1760719706672</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1760719706672</updated>
+    </task>
+    <task id="LOCAL-00021" summary="updated param caps for pop, gens, workers">
+      <option name="closed" value="true" />
+      <created>1760720551288</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1760720551288</updated>
+    </task>
+    <task id="LOCAL-00022" summary="phase 6 done">
+      <option name="closed" value="true" />
+      <created>1760721548343</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1760721548343</updated>
+    </task>
+    <option name="localTasksCounter" value="23" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Project Created" />
@@ -188,6 +306,17 @@
     <MESSAGE value="phase 0 done" />
     <MESSAGE value="phase 1 done" />
     <MESSAGE value="Home.py framework set up. Phase 3 done" />
-    <option name="LAST_COMMIT_MESSAGE" value="Home.py framework set up. Phase 3 done" />
+    <MESSAGE value="model builder - Phase 4 partially implemented" />
+    <MESSAGE value="working portfolio equity graph" />
+    <MESSAGE value="working heatmap. neeed to remaeke trade graph" />
+    <MESSAGE value="finished task T023" />
+    <MESSAGE value="Working trades graph" />
+    <MESSAGE value="reformatting of model builder dashboard" />
+    <MESSAGE value="model builder dashboard date range toggle" />
+    <MESSAGE value="working graphs, need spacing adjustment" />
+    <MESSAGE value="working graphs" />
+    <MESSAGE value="updated param caps for pop, gens, workers" />
+    <MESSAGE value="phase 6 done" />
+    <option name="LAST_COMMIT_MESSAGE" value="phase 6 done" />
   </component>
 </project>

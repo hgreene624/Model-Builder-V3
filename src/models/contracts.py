@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime
+from typing import Any
 
 
 def _current_timestamp() -> str:
-    return datetime.now(tz=timezone.utc).isoformat()
+    return datetime.now(tz=UTC).isoformat()
 
 
 @dataclass
@@ -16,22 +16,24 @@ class Portfolio:
     description: str | None
     source: str
     seed_reference: str | None
-    filters: Dict[str, Any]
-    coverage_window: Dict[str, str]
-    tickers: List[str]
-    liquidity_stats: Dict[str, Any]
-    notes: List[str]
-    coverage_summary: Dict[str, Any] = field(default_factory=dict)
-    shard_hints: Dict[str, Any] = field(default_factory=dict)
+    filters: dict[str, Any]
+    coverage_window: dict[str, str]
+    tickers: list[str]
+    liquidity_stats: dict[str, Any]
+    notes: list[str]
+    coverage_summary: dict[str, Any] = field(default_factory=dict)
+    shard_hints: dict[str, Any] = field(default_factory=dict)
     created_at: str = field(default_factory=_current_timestamp)
     updated_at: str = field(default_factory=_current_timestamp)
     schema_version: str = field(default="1.1.0")
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Portfolio":
+    def from_dict(cls, data: dict[str, Any]) -> Portfolio:
         payload = dict(data)
         liquidity_stats = dict(payload.get("liquidity_stats") or {})
-        liquidity_stats.setdefault("coverage_gap_count", liquidity_stats.get("coverage_gap_count", 0))
+        liquidity_stats.setdefault(
+            "coverage_gap_count", liquidity_stats.get("coverage_gap_count", 0)
+        )
         created_at = payload.get("created_at") or _current_timestamp()
         portfolio = cls(
             portfolio_id=payload["portfolio_id"],
@@ -62,9 +64,9 @@ class ParameterSet:
     model_id: str
     portfolio_id: str
     run_id: str
-    parameters: Dict[str, Any]
-    fitness: Dict[str, float]
-    constraints: Dict[str, Any]
+    parameters: dict[str, Any]
+    fitness: dict[str, float]
+    constraints: dict[str, Any]
     created_at: str
     schema_version: str = field(default="1.0.0")
 
@@ -76,16 +78,17 @@ class TradeRecord:
     action: str
     quantity: float
     price: float
-    costs: Dict[str, float]
-    exit_timestamp: Optional[str]
+    costs: dict[str, float]
+    exit_timestamp: str | None
     pnl: float
+    entry_timestamp: str | None = None
 
 
 @dataclass
 class BacktestResult:
-    equity_curve: List[Dict[str, Any]]
-    trades: List[TradeRecord]
-    benchmarks: List[Dict[str, Any]]
-    kpis: Dict[str, float]
-    risk_notes: List[str]
+    equity_curve: list[dict[str, Any]]
+    trades: list[TradeRecord]
+    benchmarks: list[dict[str, Any]]
+    kpis: dict[str, float]
+    risk_notes: list[str]
     schema_version: str = field(default="1.0.0")

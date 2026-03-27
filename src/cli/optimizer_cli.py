@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Optional, Tuple
 
 import typer
 
@@ -25,29 +24,31 @@ def optimize(
     sample_size: int = typer.Option(5, min=1, help="Number of symbols sampled from the portfolio."),
     atr_window: int = typer.Option(14, min=5, max=100, help="Base ATR window."),
     breakout_lookback: int = typer.Option(20, min=5, max=100, help="Base breakout lookback."),
-    breakout_multiplier: float = typer.Option(2.0, min=0.5, max=5.0, help="Base breakout multiplier."),
+    breakout_multiplier: float = typer.Option(
+        2.0, min=0.5, max=5.0, help="Base breakout multiplier."
+    ),
     risk_fraction: float = typer.Option(0.02, min=0.001, max=0.2, help="Base risk fraction."),
-    position_weight_range: Tuple[float, float] = typer.Option(
+    position_weight_range: tuple[float, float] = typer.Option(
         (0.05, 0.25),
         help="Minimum and maximum position weights applied after risk sizing.",
         show_default=True,
     ),
-    atr_window_range: Tuple[int, int] = typer.Option(
+    atr_window_range: tuple[int, int] = typer.Option(
         (10, 30),
         help="Bounds for ATR window during optimisation.",
         show_default=True,
     ),
-    breakout_lookback_range: Tuple[int, int] = typer.Option(
+    breakout_lookback_range: tuple[int, int] = typer.Option(
         (15, 45),
         help="Bounds for breakout lookback during optimisation.",
         show_default=True,
     ),
-    breakout_multiplier_range: Tuple[float, float] = typer.Option(
+    breakout_multiplier_range: tuple[float, float] = typer.Option(
         (1.5, 3.5),
         help="Bounds for breakout multiplier during optimisation.",
         show_default=True,
     ),
-    risk_fraction_range: Tuple[float, float] = typer.Option(
+    risk_fraction_range: tuple[float, float] = typer.Option(
         (0.01, 0.04),
         help="Bounds for risk fraction during optimisation.",
         show_default=True,
@@ -55,16 +56,18 @@ def optimize(
     population_size: int = typer.Option(9, min=3, help="Number of genomes per generation."),
     generations: int = typer.Option(3, min=1, help="Number of evolutionary generations."),
     max_workers: int = typer.Option(1, min=1, help="Process pool size for evaluation."),
-    seed: Optional[int] = typer.Option(42, help="Deterministic random seed."),
-    initial_capital: float = typer.Option(100_000.0, min=1_000.0, help="Initial capital for backtests."),
-    objective_weights: Tuple[float, float, float] = typer.Option(
+    seed: int | None = typer.Option(42, help="Deterministic random seed."),
+    initial_capital: float = typer.Option(
+        100_000.0, min=1_000.0, help="Initial capital for backtests."
+    ),
+    objective_weights: tuple[float, float, float] = typer.Option(
         (0.5, 0.3, 0.2),
         help="Weights for CAGR, Calmar, and Sharpe components respectively.",
         show_default=True,
     ),
     max_trade_rate: float = typer.Option(50.0, help="Constraint: maximum annualised trades."),
     min_hold_days: float = typer.Option(2.0, help="Constraint: minimum average hold days."),
-    output: Optional[Path] = typer.Option(None, help="Optional JSON file path for summary output."),
+    output: Path | None = typer.Option(None, help="Optional JSON file path for summary output."),
     use_synthetic: bool = typer.Option(
         False,
         "--synthetic/--no-synthetic",
@@ -104,7 +107,10 @@ def optimize(
     )
     bounds = {
         "atr_window": (float(min(atr_window_range)), float(max(atr_window_range))),
-        "breakout_lookback": (float(min(breakout_lookback_range)), float(max(breakout_lookback_range))),
+        "breakout_lookback": (
+            float(min(breakout_lookback_range)),
+            float(max(breakout_lookback_range)),
+        ),
         "breakout_multiplier": (
             float(min(breakout_multiplier_range)),
             float(max(breakout_multiplier_range)),
@@ -154,7 +160,7 @@ def optimize(
     portfolio_record = store.load_portfolio(portfolio_id)
     if portfolio_record is not None:
         note = (
-            f"{datetime.now(tz=timezone.utc).isoformat()} · run {result.run_id} "
+            f"{datetime.now(tz=UTC).isoformat()} · run {result.run_id} "
             f"saved parameter set {result.parameter_set.parameter_set_id}"
         )
         notes = list(portfolio_record.notes or [])

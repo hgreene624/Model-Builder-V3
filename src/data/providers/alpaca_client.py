@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import os
-from datetime import datetime, timezone
-from typing import Any, Callable
+from collections.abc import Callable
+from datetime import datetime
+from typing import Any
 
 import pandas as pd
 
@@ -20,10 +21,10 @@ class AlpacaClient:
         self._fetcher = fetcher or self._default_fetcher()
 
     def _default_fetcher(self) -> FetchFunc:
+        from alpaca.data.enums import Adjustment, DataFeed
         from alpaca.data.historical.stock import StockHistoricalDataClient
         from alpaca.data.requests import StockBarsRequest
         from alpaca.data.timeframe import TimeFrame
-        from alpaca.data.enums import DataFeed, Adjustment
 
         if not self.settings.has_alpaca_credentials:
             raise RuntimeError("Alpaca credentials are required but were not provided.")
@@ -94,7 +95,7 @@ def _alpaca_payload_to_frame(payload: Any, symbol: str) -> pd.DataFrame:
 
     bars = getattr(payload, "bars", None)
     if bars is None and hasattr(payload, "data"):
-        data = getattr(payload, "data")
+        data = payload.data
         if isinstance(data, dict):
             bars = data.get("bars") or data.get(symbol)
 
@@ -152,7 +153,9 @@ def _normalize_alpaca_frame(df: pd.DataFrame, symbol: str) -> pd.DataFrame:
         else:
             for level in range(df.columns.nlevels):
                 level_values = df.columns.get_level_values(level)
-                if {"open", "high", "low", "close", "volume"}.issubset({str(v).lower() for v in level_values}):
+                if {"open", "high", "low", "close", "volume"}.issubset(
+                    {str(v).lower() for v in level_values}
+                ):
                     df = df.droplevel(level, axis=1)
                     break
         df.columns = [str(c).lower() for c in df.columns]

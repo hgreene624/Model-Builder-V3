@@ -3,9 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pandas as pd
-
-from src.models.contracts import Portfolio, ParameterSet
+from src.models.contracts import Portfolio
 from src.storage.artifacts import ArtifactStore
 from src.storage.layout import StorageLayout
 

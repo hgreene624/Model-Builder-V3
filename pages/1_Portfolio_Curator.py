@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 from pathlib import Path
-from typing import Any, Dict, Tuple, List
+from typing import Any
 
-import streamlit as st
 import pandas as pd
+import streamlit as st
 
 from src.config.settings import AppSettings
 from src.data.cache import MarketDataCache
@@ -16,8 +16,7 @@ from src.data.universe_loader import (
     list_universes,
     load_universe,
 )
-from src.portfolio.filters import FilterStats, available_sectors, filter_universe
-from src.portfolio.liquidity import fetch_liquidity
+from src.models.contracts import Portfolio
 from src.portfolio.draft import (
     DraftPortfolioState,
     add_to_draft,
@@ -26,11 +25,11 @@ from src.portfolio.draft import (
     remove_from_draft,
     serialize_state,
 )
-from src.models.contracts import Portfolio
+from src.portfolio.filters import FilterStats, available_sectors, filter_universe
+from src.portfolio.liquidity import fetch_liquidity
 from src.portfolio.services import normalize_portfolio_id
 from src.storage.artifacts import ArtifactStore
 from src.storage.layout import StorageLayout
-
 
 SESSION_KEYS = {
     "universe_summary": "portfolio_universe_summary",
@@ -80,10 +79,10 @@ def _artifact_store(settings: AppSettings) -> ArtifactStore:
     return store
 
 
-def _aggregate_shard_hints(frame: pd.DataFrame | None) -> Dict[str, Any]:
+def _aggregate_shard_hints(frame: pd.DataFrame | None) -> dict[str, Any]:
     if frame is None or frame.empty or "shard_hints" not in frame:
         return {}
-    aggregated: Dict[str, Dict[str, Any]] = {}
+    aggregated: dict[str, dict[str, Any]] = {}
     for hints in frame["shard_hints"]:
         if not isinstance(hints, dict):
             continue
@@ -128,13 +127,15 @@ def _build_portfolio_document(
     universe_summary: UniverseSummary,
     draft_state: DraftPortfolioState,
     liquidity_frame: pd.DataFrame,
-    filters: Dict[str, object],
-    thresholds: Dict[str, float],
-    priors_window: Dict[str, date],
-    notes: List[str],
+    filters: dict[str, object],
+    thresholds: dict[str, float],
+    priors_window: dict[str, date],
+    notes: list[str],
 ) -> Portfolio:
     stats = draft_stats(draft_state, liquidity_frame)
-    subset = liquidity_frame.loc[liquidity_frame.index.intersection(draft_state.selected_symbols)].copy()
+    subset = liquidity_frame.loc[
+        liquidity_frame.index.intersection(draft_state.selected_symbols)
+    ].copy()
 
     priors_start = priors_window["start"].isoformat()
     priors_end = priors_window["end"].isoformat()
@@ -149,7 +150,7 @@ def _build_portfolio_document(
     }
     liquidity_stats = {key: value for key, value in liquidity_stats.items() if value is not None}
 
-    filters_payload: Dict[str, Any] = dict(filters or {})
+    filters_payload: dict[str, Any] = dict(filters or {})
     if thresholds:
         filters_payload["thresholds"] = thresholds
     filters_payload["universe"] = {
@@ -187,15 +188,15 @@ def _default_priors_window() -> tuple[date, date]:
     return start, prev_close
 
 
-def _initialize_priors_window() -> Dict[str, date]:
+def _initialize_priors_window() -> dict[str, date]:
     if SESSION_KEYS["priors_window"] not in st.session_state:
         start, end = _default_priors_window()
         st.session_state[SESSION_KEYS["priors_window"]] = {"start": start, "end": end}
     return st.session_state[SESSION_KEYS["priors_window"]]
 
 
-def _prepare_filters(total_symbols: int) -> Dict[str, object]:
-    filters: Dict[str, object] = st.session_state.get(SESSION_KEYS["filters"], {})
+def _prepare_filters(total_symbols: int) -> dict[str, object]:
+    filters: dict[str, object] = st.session_state.get(SESSION_KEYS["filters"], {})
     filters.setdefault("search", "")
     filters.setdefault("sectors", [])
     filters.setdefault("max_symbols", min(100, total_symbols) if total_symbols else 0)
@@ -217,8 +218,12 @@ def _update_draft_state(state: DraftPortfolioState) -> None:
     st.session_state[SESSION_KEYS["draft"]] = serialize_state(state)
 
 
-def _render_filters(universe_summary: UniverseSummary) -> Tuple[dict[str, object], FilterStats, pd.DataFrame]:
-    universe = load_universe(universe_summary.identifier, directory=universe_summary.source_path.parent)
+def _render_filters(
+    universe_summary: UniverseSummary,
+) -> tuple[dict[str, object], FilterStats, pd.DataFrame]:
+    universe = load_universe(
+        universe_summary.identifier, directory=universe_summary.source_path.parent
+    )
     filters = _prepare_filters(len(universe.symbols))
     draft_state = _get_draft_state(universe_summary)
 
@@ -234,8 +239,12 @@ def _render_filters(universe_summary: UniverseSummary) -> Tuple[dict[str, object
 
     with filter_cols[1]:
         sector_options = available_sectors(universe)
-        default_sectors = [sector for sector in filters.get("sectors", []) if sector in sector_options]
-        selected_sectors = st.multiselect("Sectors", options=sector_options, default=default_sectors)
+        default_sectors = [
+            sector for sector in filters.get("sectors", []) if sector in sector_options
+        ]
+        selected_sectors = st.multiselect(
+            "Sectors", options=sector_options, default=default_sectors
+        )
     filters["sectors"] = selected_sectors
 
     total_symbols = len(universe.symbols)
@@ -282,12 +291,14 @@ def _render_filters(universe_summary: UniverseSummary) -> Tuple[dict[str, object
     cols[1].metric("Matched", stats.matched_symbols)
     cols[2].metric("In view", stats.limited_symbols)
 
-    display_frame = frame.reset_index().rename(columns={
-        "ticker": "Ticker",
-        "name": "Name",
-        "sector": "Sector",
-        "industry": "Industry",
-    })
+    display_frame = frame.reset_index().rename(
+        columns={
+            "ticker": "Ticker",
+            "name": "Name",
+            "sector": "Sector",
+            "industry": "Industry",
+        }
+    )
     base_columns = ["Ticker", "Name", "Sector", "Industry"]
     metrics_columns = [
         "Median Price",
@@ -392,7 +403,7 @@ def _render_draft_table(
 def _render_persistence_controls(
     settings: AppSettings,
     universe_summary: UniverseSummary,
-    filters: Dict[str, object],
+    filters: dict[str, object],
     liquidity_frame: pd.DataFrame | None,
 ) -> None:
     draft_state = _get_draft_state(universe_summary)
@@ -414,7 +425,9 @@ def _render_persistence_controls(
         return
 
     st.subheader("Save portfolio")
-    default_name = st.session_state.get(SESSION_KEYS["draft_name"]) or f"{universe_summary.name} Draft"
+    default_name = (
+        st.session_state.get(SESSION_KEYS["draft_name"]) or f"{universe_summary.name} Draft"
+    )
     if SESSION_KEYS["draft_name"] not in st.session_state:
         st.session_state[SESSION_KEYS["draft_name"]] = default_name
     name_value = st.text_input("Portfolio name", key=SESSION_KEYS["draft_name"])
@@ -498,7 +511,9 @@ def _render_saved_portfolios(settings: AppSettings) -> None:
         key=SESSION_KEYS["selected_portfolio"],
     )
 
-    selected_portfolio = next((portfolio for portfolio in portfolios if portfolio.name == selected_name), None)
+    selected_portfolio = next(
+        (portfolio for portfolio in portfolios if portfolio.name == selected_name), None
+    )
     if selected_portfolio is None:
         return
 
@@ -521,7 +536,7 @@ def _render_table_view() -> None:
     st.dataframe(table, use_container_width=True)
 
 
-def _ensure_thresholds() -> Dict[str, float]:
+def _ensure_thresholds() -> dict[str, float]:
     thresholds = st.session_state.get(SESSION_KEYS["thresholds"])
     if thresholds is None:
         thresholds = {"price_floor": 5.0, "volume_floor": 1_000_000.0}
@@ -678,7 +693,9 @@ def _render_liquidity_panel(
     st.session_state[SESSION_KEYS["liquidity_symbols"]] = universe_filtered_symbols
 
     draft_state = _get_draft_state(universe_summary)
-    invalid_symbols = [symbol for symbol in draft_state.selected_symbols if symbol not in universe_filtered_symbols]
+    invalid_symbols = [
+        symbol for symbol in draft_state.selected_symbols if symbol not in universe_filtered_symbols
+    ]
     if invalid_symbols:
         remove_from_draft(draft_state, invalid_symbols)
         _update_draft_state(draft_state)
@@ -708,12 +725,16 @@ def _render_liquidity_panel(
 
 def main(settings: AppSettings) -> None:
     st.title("Portfolio Curator")
-    st.write("Start from a published index universe, refine it with filters, and prepare it for modeling.")
+    st.write(
+        "Start from a published index universe, refine it with filters, and prepare it for modeling."
+    )
 
     universe_dir = _universe_directory(settings)
     summaries = list_universes(universe_dir)
     if not summaries:
-        st.warning("No index universes found. Add JSON files to `storage/index_universes/` to continue.")
+        st.warning(
+            "No index universes found. Add JSON files to `storage/index_universes/` to continue."
+        )
         return
 
     loader = _create_loader(settings)

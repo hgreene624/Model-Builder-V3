@@ -2,19 +2,17 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Dict, Optional
 
 import typer
 
 from src.config.settings import AppSettings
 from src.data.cache import MarketDataCache
 from src.data.loader import MarketDataLoader
-from src.models.contracts import Portfolio
+from src.data.universe_loader import UniverseNotFoundError, load_universe
 from src.portfolio import services
-from src.portfolio.seeds import SEED_COLLECTIONS
-from src.data.universe_loader import load_universe, UniverseNotFoundError
 from src.portfolio.filters import filter_universe
 from src.portfolio.liquidity import fetch_liquidity
+from src.portfolio.seeds import SEED_COLLECTIONS
 from src.storage.artifacts import ArtifactStore
 from src.storage.layout import StorageLayout
 
@@ -35,7 +33,7 @@ def _build_loader(settings: AppSettings) -> MarketDataLoader:
     return MarketDataLoader(cache=cache, providers=providers, default_provider=default)
 
 
-def _load_symbols(seed: Optional[str], csv: Optional[Path], include: Optional[str]) -> list[str]:
+def _load_symbols(seed: str | None, csv: Path | None, include: str | None) -> list[str]:
     symbols: list[str] = []
     if seed:
         symbols.extend(SEED_COLLECTIONS.get(seed, []))
@@ -50,7 +48,7 @@ def _load_symbols(seed: Optional[str], csv: Optional[Path], include: Optional[st
     )
 
 
-def _parse_sectors(raw: Optional[str]) -> list[str]:
+def _parse_sectors(raw: str | None) -> list[str]:
     if not raw:
         return []
     return [segment.strip() for segment in raw.split(",") if segment.strip()]
@@ -58,21 +56,27 @@ def _parse_sectors(raw: Optional[str]) -> list[str]:
 
 @portfolio_app.command("curate")
 def curate(
-    seed: Optional[str] = typer.Option(None, help="Seed collection name"),
-    csv: Optional[Path] = typer.Option(None, help="Path to CSV with tickers"),
-    include: Optional[str] = typer.Option(None, help="Only keep tickers containing substring"),
-    exclude: Optional[str] = typer.Option(None, help="Drop tickers containing substring"),
-    universe: Optional[str] = typer.Option(None, help="Universe identifier to load from storage/index_universes"),
-    search: Optional[str] = typer.Option(None, help="Case-insensitive text search for universe filtering"),
-    sectors: Optional[str] = typer.Option(None, help="Comma-separated sector filters when using universes"),
-    min_price: Optional[float] = typer.Option(None, help="Median price floor"),
-    min_dollar_volume: Optional[float] = typer.Option(None, help="Median dollar volume floor"),
+    seed: str | None = typer.Option(None, help="Seed collection name"),
+    csv: Path | None = typer.Option(None, help="Path to CSV with tickers"),
+    include: str | None = typer.Option(None, help="Only keep tickers containing substring"),
+    exclude: str | None = typer.Option(None, help="Drop tickers containing substring"),
+    universe: str | None = typer.Option(
+        None, help="Universe identifier to load from storage/index_universes"
+    ),
+    search: str | None = typer.Option(
+        None, help="Case-insensitive text search for universe filtering"
+    ),
+    sectors: str | None = typer.Option(
+        None, help="Comma-separated sector filters when using universes"
+    ),
+    min_price: float | None = typer.Option(None, help="Median price floor"),
+    min_dollar_volume: float | None = typer.Option(None, help="Median dollar volume floor"),
     max_count: int = typer.Option(100, min=10, max=500, help="Cap on universe size"),
     start: str = typer.Option("2020-01-01", help="Coverage start (YYYY-MM-DD)"),
     end: str = typer.Option("2025-01-01", help="Coverage end (YYYY-MM-DD)"),
-    name: Optional[str] = typer.Option(None, help="Portfolio name"),
-    description: Optional[str] = typer.Option(None, help="Optional description"),
-    output: Optional[Path] = typer.Option(None, help="Optional path to write portfolio JSON"),
+    name: str | None = typer.Option(None, help="Portfolio name"),
+    description: str | None = typer.Option(None, help="Optional description"),
+    output: Path | None = typer.Option(None, help="Optional path to write portfolio JSON"),
 ) -> None:
     """Curate and optionally save a portfolio from seeds or CSV."""
     settings = AppSettings.from_env()
@@ -82,12 +86,12 @@ def curate(
         raise typer.BadParameter("Provide a universe, seed, or CSV source to supply tickers.")
 
     sector_list = _parse_sectors(sectors)
-    filters_metadata: Dict[str, object] = {
+    filters_metadata: dict[str, object] = {
         "include": include,
         "exclude": exclude,
         "max_count": max_count,
     }
-    thresholds_requested: Dict[str, float] = {}
+    thresholds_requested: dict[str, float] = {}
     if min_price is not None:
         thresholds_requested["price_floor"] = float(min_price)
     if min_dollar_volume is not None:
@@ -150,7 +154,9 @@ def curate(
             raise typer.Exit(code=1)
 
     source_type = "universe" if universe else ("seed" if seed else "manual")
-    default_name = name or (f"{universe} Portfolio" if universe else (f"{seed} Universe" if seed else "CLI Portfolio"))
+    default_name = name or (
+        f"{universe} Portfolio" if universe else (f"{seed} Universe" if seed else "CLI Portfolio")
+    )
 
     portfolio, preview = services.build_portfolio(
         name=default_name,
@@ -168,7 +174,9 @@ def curate(
         },
     )
 
-    typer.echo(f"Selected {len(preview.tickers)} tickers. Median price: {preview.stats['median_price']:.2f}")
+    typer.echo(
+        f"Selected {len(preview.tickers)} tickers. Median price: {preview.stats['median_price']:.2f}"
+    )
 
     if output:
         output.parent.mkdir(parents=True, exist_ok=True)

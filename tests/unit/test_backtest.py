@@ -33,7 +33,9 @@ def signal_frame(price_series: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame.from_records(records)
 
 
-def test_backtest_produces_equity_and_trades(price_series: pd.DataFrame, signal_frame: pd.DataFrame) -> None:
+def test_backtest_produces_equity_and_trades(
+    price_series: pd.DataFrame, signal_frame: pd.DataFrame
+) -> None:
     result = run_backtest(
         prices=price_series,
         signals=signal_frame,
@@ -56,7 +58,9 @@ def test_backtest_produces_equity_and_trades(price_series: pd.DataFrame, signal_
     assert kpis["avg_hold_days"] == pytest.approx(2.0, rel=1e-6)
 
 
-def test_backtest_applies_cost_model(price_series: pd.DataFrame, signal_frame: pd.DataFrame) -> None:
+def test_backtest_applies_cost_model(
+    price_series: pd.DataFrame, signal_frame: pd.DataFrame
+) -> None:
     baseline = run_backtest(
         prices=price_series,
         signals=signal_frame,

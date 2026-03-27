@@ -1,0 +1,430 @@
+openapi: 3.1.0
+info:
+  title: Model Builder Strategy Profiles API
+  version: 0.1.0
+  description: >
+    Internal contract describing how UI and CLI services interact with strategy profiles,
+    evolutionary runs, and evaluation telemetry. All endpoints operate on local JSON artifacts
+    with no authentication layer per product decision.
+servers:
+  - url: http://localhost:8501/internal
+    description: Local Streamlit service shim
+paths:
+  /strategy-profiles:
+    get:
+      summary: List available strategy profiles
+      operationId: listStrategyProfiles
+      responses:
+        "200":
+          description: Profiles retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StrategyProfileSummary"
+    post:
+      summary: Create or update a strategy profile
+      operationId: upsertStrategyProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StrategyProfileCreate"
+      responses:
+        "201":
+          description: Profile created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StrategyProfile"
+        "200":
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StrategyProfile"
+  /strategy-profiles/{profile_id}:
+    delete:
+      summary: Delete a strategy profile
+      operationId: deleteStrategyProfile
+      parameters:
+        - name: profile_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Profile deleted
+  /strategy-profiles/{profile_id}/optimize:
+    post:
+      summary: Start an optimization run for a profile
+      operationId: startOptimizationRun
+      parameters:
+        - name: profile_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OptimizationRequest"
+      responses:
+        "202":
+          description: Run accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvaluationRun"
+  /evaluation-runs/{run_id}:
+    get:
+      summary: Retrieve metadata for a specific run
+      operationId: getEvaluationRun
+      parameters:
+        - name: run_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Run metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvaluationRun"
+  /evaluation-runs/{run_id}/candidates:
+    get:
+      summary: Fetch candidate evaluations for a run
+      operationId: listCandidateEvaluations
+      parameters:
+        - name: run_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Candidate evaluations returned in chronological order
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CandidateEvaluationEvent"
+  /evaluation-runs/{run_id}/best-candidate:
+    get:
+      summary: Retrieve the best candidate snapshot for a run
+      operationId: getBestCandidate
+      parameters:
+        - name: run_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Best candidate snapshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BestCandidateSnapshot"
+components:
+  schemas:
+    StrategyProfileSummary:
+      type: object
+      required: [profile_id, name, portfolio_id, updated_at]
+      properties:
+        profile_id:
+          type: string
+        name:
+          type: string
+        portfolio_id:
+          type: string
+        updated_at:
+          type: string
+          format: date-time
+    StrategyProfileCreate:
+      type: object
+      required:
+        - name
+        - portfolio_id
+        - train_percentage
+        - atr_warmup_days
+        - parameters
+      properties:
+        profile_id:
+          type: string
+          description: Optional override when updating an existing profile
+        name:
+          type: string
+        description:
+          type: string
+        portfolio_id:
+          type: string
+        train_percentage:
+          type: number
+          minimum: 0.0
+          maximum: 1.0
+        atr_warmup_days:
+          type: integer
+          minimum: 1
+        parameters:
+          type: object
+          additionalProperties: {}
+      example:
+        name: "Momentum Strategy"
+        description: "ATR breakout with optimized parameters"
+        portfolio_id: "momentum_20241017"
+        train_percentage: 0.7
+        atr_warmup_days: 14
+        parameters:
+          symbol_count: 5
+          atr_window: 14
+          breakout_lookback: 20
+          breakout_multiplier: 2.0
+          risk_fraction: 0.02
+          min_weight: 0.05
+          max_weight: 0.25
+          population_size: 90
+          generations: 30
+          max_workers: 8
+          seed: 42
+          objective_weights:
+            cagr: 0.5
+            calmar: 0.3
+            sharpe: 0.2
+          bounds:
+            atr_window: [10, 30]
+            breakout_lookback: [15, 45]
+            breakout_multiplier: [1.5, 3.5]
+            risk_fraction: [0.01, 0.04]
+          max_trade_rate: 50.0
+          min_hold_days: 2.0
+          initial_capital: 100000.0
+          use_synthetic: false
+    StrategyProfile:
+      allOf:
+        - $ref: "#/components/schemas/StrategyProfileCreate"
+        - type: object
+          required: [profile_id, schema_version, created_at, updated_at]
+          properties:
+            schema_version:
+              type: string
+            profile_id:
+              type: string
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+    OptimizationRequest:
+      type: object
+      required:
+        - coverage_start
+        - coverage_end
+        - train_percentage
+        - warmup_days
+      properties:
+        coverage_start:
+          type: string
+          format: date
+        coverage_end:
+          type: string
+          format: date
+        train_percentage:
+          type: number
+        warmup_days:
+          type: integer
+        seed:
+          type: integer
+          description: Optional deterministic seed for reproducibility
+    EvaluationRun:
+      type: object
+      required:
+        - run_id
+        - profile_id
+        - portfolio_id
+        - train_window
+        - holdout_window
+        - warmup_window
+        - best_candidate_id
+        - artifact_paths
+        - created_at
+      properties:
+        run_id:
+          type: string
+        profile_id:
+          type: string
+        portfolio_id:
+          type: string
+        train_window:
+          $ref: "#/components/schemas/CoverageSlice"
+        holdout_window:
+          $ref: "#/components/schemas/CoverageSlice"
+        warmup_window:
+          $ref: "#/components/schemas/CoverageSlice"
+        best_candidate_id:
+          type: string
+        artifact_paths:
+          type: object
+          additionalProperties:
+            type: string
+        created_at:
+          type: string
+          format: date-time
+    CoverageSlice:
+      type: object
+      required: [start, end]
+      properties:
+        start:
+          type: string
+          format: date
+        end:
+          type: string
+          format: date
+    CandidateEvaluation:
+      type: object
+      required:
+        - candidate_id
+        - score
+        - score_delta
+        - metrics
+        - timestamp
+        - parameter_payload
+      properties:
+        candidate_id:
+          type: string
+        score:
+          type: number
+        score_delta:
+          type: number
+        metrics:
+          type: object
+          additionalProperties:
+            type: number
+        timestamp:
+          type: string
+          format: date-time
+        parameter_payload:
+          type: object
+          additionalProperties: {}
+    CandidateEvaluationMetadata:
+      type: object
+      properties:
+        generation:
+          type: integer
+          minimum: 0
+        rank:
+          type: integer
+          minimum: 1
+        raw_score:
+          type: number
+        penalty:
+          type: number
+        stats:
+          type: object
+          additionalProperties:
+            type: number
+      additionalProperties: false
+    TelemetryEnvelope:
+      type: object
+      required:
+        - schema_version
+        - timestamp
+        - event_type
+        - run_id
+        - session
+        - sequence
+        - payload
+      properties:
+        schema_version:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        event_type:
+          type: string
+        run_id:
+          type: string
+        session:
+          type: string
+          description: Source of the event (`app`, `cli`, etc.).
+        sequence:
+          type: integer
+          minimum: 1
+        payload:
+          type: object
+          additionalProperties: {}
+        metadata:
+          type: object
+          additionalProperties: {}
+    CandidateEvaluationEvent:
+      allOf:
+        - $ref: "#/components/schemas/TelemetryEnvelope"
+        - type: object
+          properties:
+            event_type:
+              type: string
+              enum: ["candidate_evaluation"]
+            payload:
+              $ref: "#/components/schemas/CandidateEvaluation"
+            metadata:
+              $ref: "#/components/schemas/CandidateEvaluationMetadata"
+    BestCandidateSnapshot:
+      type: object
+      required:
+        - candidate_id
+        - score
+        - score_delta
+        - parameters
+        - equity_curve_path
+        - momentum_heatmap
+        - trade_timeline
+      properties:
+        candidate_id:
+          type: string
+        score:
+          type: number
+        score_delta:
+          type: number
+        parameters:
+          type: object
+          additionalProperties: {}
+        equity_curve_path:
+          type: string
+        momentum_heatmap:
+          type: object
+          properties:
+            intervals:
+              type: array
+              items:
+                type: string
+            values:
+              type: array
+              items:
+                type: number
+            narrative:
+              type: string
+        trade_timeline:
+          type: array
+          items:
+            type: object
+            required: [timestamp, pnl, notional]
+            properties:
+              timestamp:
+                type: string
+                format: date-time
+              pnl:
+                type: number
+              notional:
+                type: number
+              side:
+                type: string
+                enum: [long, short]

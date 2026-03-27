@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field, asdict
-from datetime import datetime, timezone
-from typing import Iterable, List, Sequence
+from collections.abc import Iterable, Sequence
+from dataclasses import asdict, dataclass, field
+from datetime import UTC, datetime
 
 import pandas as pd
 
@@ -12,13 +12,13 @@ def _normalize(symbol: str) -> str:
 
 
 def _current_timestamp() -> str:
-    return datetime.now(tz=timezone.utc).isoformat()
+    return datetime.now(tz=UTC).isoformat()
 
 
 @dataclass
 class DraftPortfolioState:
     universe_id: str
-    selected_symbols: List[str] = field(default_factory=list)
+    selected_symbols: list[str] = field(default_factory=list)
     created_at: str = field(default_factory=_current_timestamp)
     updated_at: str = field(default_factory=_current_timestamp)
 
@@ -26,7 +26,7 @@ class DraftPortfolioState:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, payload: dict[str, object]) -> "DraftPortfolioState":
+    def from_dict(cls, payload: dict[str, object]) -> DraftPortfolioState:
         return cls(
             universe_id=str(payload.get("universe_id", "")),
             selected_symbols=[_normalize(sym) for sym in payload.get("selected_symbols", [])],
@@ -49,7 +49,9 @@ class DraftPortfolioState:
         targets = {_normalize(symbol) for symbol in symbols if symbol}
         if not targets:
             return
-        self.selected_symbols = [symbol for symbol in self.selected_symbols if symbol not in targets]
+        self.selected_symbols = [
+            symbol for symbol in self.selected_symbols if symbol not in targets
+        ]
         self.updated_at = _current_timestamp()
 
     def limit(self, max_symbols: int) -> None:
@@ -73,7 +75,9 @@ def serialize_state(state: DraftPortfolioState) -> dict[str, object]:
     return state.to_dict()
 
 
-def add_to_draft(state: DraftPortfolioState, symbols: Sequence[str], max_symbols: int | None = None) -> DraftPortfolioState:
+def add_to_draft(
+    state: DraftPortfolioState, symbols: Sequence[str], max_symbols: int | None = None
+) -> DraftPortfolioState:
     state.add_symbols(symbols)
     if max_symbols is not None:
         state.limit(max_symbols)
@@ -85,7 +89,9 @@ def remove_from_draft(state: DraftPortfolioState, symbols: Sequence[str]) -> Dra
     return state
 
 
-def draft_stats(state: DraftPortfolioState, liquidity_frame: pd.DataFrame | None = None) -> dict[str, object]:
+def draft_stats(
+    state: DraftPortfolioState, liquidity_frame: pd.DataFrame | None = None
+) -> dict[str, object]:
     total = len(state.selected_symbols)
     if total == 0 or liquidity_frame is None or liquidity_frame.empty:
         return {
@@ -108,15 +114,21 @@ def draft_stats(state: DraftPortfolioState, liquidity_frame: pd.DataFrame | None
             "coverage_gap_count": 0,
         }
 
-    median_price = float(subset["median_price"].median(skipna=True)) if "median_price" in subset else None
+    median_price = (
+        float(subset["median_price"].median(skipna=True)) if "median_price" in subset else None
+    )
     median_dollar_volume = (
-        float(subset["median_dollar_volume"].median(skipna=True)) if "median_dollar_volume" in subset else None
+        float(subset["median_dollar_volume"].median(skipna=True))
+        if "median_dollar_volume" in subset
+        else None
     )
     coverage_start = subset["coverage_start"].dropna().min() if "coverage_start" in subset else None
     coverage_end = subset["coverage_end"].dropna().max() if "coverage_end" in subset else None
     coverage_gap_count = 0
     if "coverage_status" in subset:
-        coverage_gap_count = int((subset["coverage_status"].fillna("").str.lower() != "complete").sum())
+        coverage_gap_count = int(
+            (subset["coverage_status"].fillna("").str.lower() != "complete").sum()
+        )
 
     return {
         "symbol_count": total,

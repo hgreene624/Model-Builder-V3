@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Dict
 
 import pytest
 
@@ -13,7 +12,7 @@ from src.optimizer.training_logger import TrainingLogger
 from src.storage.layout import StorageLayout
 
 
-def evaluation_function(genome: Dict[str, float]) -> Dict[str, Dict[str, float]]:
+def evaluation_function(genome: dict[str, float]) -> dict[str, dict[str, float]]:
     atr_window = genome["atr_window"]
     multiplier = genome["breakout_multiplier"]
 
